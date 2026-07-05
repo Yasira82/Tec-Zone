@@ -1,70 +1,75 @@
 'use client';
 
-// Example protected page demonstrating the canonical ADR-007 dual-mode buy flow.
-// Copy this handler into your real product/checkout components.
-import { useEffect, useState } from 'react';
+// TEC Zone — the Verification Runtime of the Pi ecosystem (C-120). Zone answers
+// one question: "What can be trusted?" It records evidence and serves verified
+// status — it never renders judgement (trust interpretation is Analytics + TEC
+// AI). V0 = Portal-ready scaffold + Zone Pro payment surface; the verified
+// registry (Projects / Merchants / Builders) ships in V1, post-Portal.
+import { usePiAuth } from '@yasser172/tec-auth';
 import { TEC_COLORS } from '@yasser172/tec-ui';
-import {
-  isHubNavigation,
-  redirectToHubPayment,
-  createPaymentRecord,
-  createU2APayment,
-} from '@/lib/pi-payment';
+import { ZonePro } from './components/ZonePro';
 
-// TODO(new app): replace with real items from your BFF (/api/bff/items).
-const DEMO_ITEM = { id: 'demo-1', name: 'Demo Item', price: 1 };
+const REGISTRY = [
+  { icon: '🏗️', title: 'Projects',  body: 'Pi ecosystem projects — TEC and non-TEC.' },
+  { icon: '🛍️', title: 'Merchants', body: 'Pi-accepting businesses, verified by evidence.' },
+  { icon: '👷', title: 'Builders',  body: 'Developers, founders, and contributors.' },
+];
 
-export default function AppHomePage() {
-  const [piReady, setPiReady] = useState(false);
-  const [status, setStatus]   = useState<string>('');
+export default function ZoneHome() {
+  const { user, isLoading } = usePiAuth();
+  const name = user?.piUsername ? `@${user.piUsername}` : 'there';
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if ((window as { __TEC_PI_READY?: boolean }).__TEC_PI_READY) setPiReady(true);
-    const onReady = () => setPiReady(true);
-    window.addEventListener('tec-pi-ready', onReady);
-    return () => window.removeEventListener('tec-pi-ready', onReady);
-  }, []);
-
-  const handleBuy = async () => {
-    const { id, name, price } = DEMO_ITEM;
-
-    // ── ADR-007 guard — ALWAYS keep this before touching window.Pi ──
-    if (isHubNavigation() || !(window as { Pi?: unknown }).Pi || !piReady) {
-      redirectToHubPayment({ amount: price, itemId: id, memo: name });   // Mode 1
-      return;
-    }
-
-    // ── Mode 2: standalone Pi Browser payment ──
-    setStatus('Creating payment…');
-    const internalId = await createPaymentRecord(price, id, name);
-    if (!internalId) { setStatus('Could not start payment.'); return; }
-
-    setStatus('Awaiting Pi approval…');
-    const result = await createU2APayment(price, name, { item_id: id }, internalId);
-    setStatus(
-      result.success ? `✅ Paid — txid ${result.txid}` :
-      result.status === 'cancelled' ? 'Payment cancelled.' :
-      `❌ ${result.message ?? 'Payment failed.'}`,
-    );
-    // On success, create the domain record: POST /api/bff/items { ..., payment_id: internalId }
+  const cardBase: React.CSSProperties = {
+    background:   TEC_COLORS.surface,
+    border:       `1px solid ${TEC_COLORS.gold}22`,
+    borderRadius: 14,
+    padding:      16,
   };
 
   return (
-    <main style={{ minHeight: '100vh', background: TEC_COLORS.bg, color: '#e7e7ea', padding: 32, fontFamily: 'system-ui, sans-serif' }}>
-      <h1 style={{ color: TEC_COLORS.gold }}>TEC App</h1>
-      <p style={{ opacity: 0.7 }}>Pi SDK: {piReady ? 'ready' : 'loading…'}</p>
+    <main style={{ minHeight: '100vh', background: TEC_COLORS.bg, color: TEC_COLORS.text, padding: '32px 22px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      <div style={{ maxWidth: 760, margin: '0 auto' }}>
+        <header>
+          <div style={{ fontSize: 12, letterSpacing: 1, color: TEC_COLORS.subtext, textTransform: 'uppercase' }}>TEC Zone · Verification Runtime</div>
+          <h1 style={{ fontSize: 26, fontWeight: 900, color: TEC_COLORS.gold, margin: '6px 0 0' }}>
+            {isLoading ? 'Welcome' : `Welcome, ${name}`}
+          </h1>
+          <p style={{ fontSize: 14, color: TEC_COLORS.subtext, margin: '6px 0 0', lineHeight: 1.6 }}>
+            The trust layer of the Pi ecosystem. Zone answers one question —
+            <strong style={{ color: TEC_COLORS.text }}> “What can be trusted?”</strong> — by
+            recording evidence, not by claiming authority (C-120).
+          </p>
+        </header>
 
-      <div style={{ marginTop: 24, padding: 20, background: TEC_COLORS.surface, borderRadius: 12, maxWidth: 360 }}>
-        <h2 style={{ margin: 0 }}>{DEMO_ITEM.name}</h2>
-        <p style={{ color: TEC_COLORS.gold }}>π {DEMO_ITEM.price}</p>
-        <button
-          onClick={handleBuy}
-          style={{ background: TEC_COLORS.goldDark, color: '#020205', border: 'none', borderRadius: 8, padding: '10px 18px', fontWeight: 700, cursor: 'pointer' }}
-        >
-          Buy with Pi
-        </button>
-        {status && <p style={{ marginTop: 12 }}>{status}</p>}
+        {/* Zone Pro — real Pi U2A payment (also the Pi Portal "Process a Transaction" step) */}
+        <ZonePro />
+
+        {/* Verified Registry — ships in V1 (post-Portal). Honest placeholder. */}
+        <section style={{ marginTop: 28 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+            <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: 0 }}>Verified Registry</h2>
+            <span style={{ fontSize: 11, color: TEC_COLORS.subtext, border: `1px solid ${TEC_COLORS.gold}33`, borderRadius: 999, padding: '2px 10px' }}>V1 · coming soon</span>
+          </div>
+          <p style={{ fontSize: 12, color: TEC_COLORS.subtext, margin: '6px 0 14px', lineHeight: 1.5 }}>
+            After Portal submission, Zone lists verified entities. Verification is
+            evidence-based and human-reviewed — “Zone Verified” is earned, never bought.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+            {REGISTRY.map((r) => (
+              <div key={r.title} style={cardBase}>
+                <div style={{ fontSize: 20 }}>{r.icon}</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: TEC_COLORS.text, marginTop: 6 }}>{r.title}</div>
+                <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 4, lineHeight: 1.5 }}>{r.body}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '22px 0 0', lineHeight: 1.5 }}>
+          Zone records evidence; it does not compute trust scores or render judgement —
+          those belong to Analytics and TEC AI (C-120 §4). Identity, payment, and asset
+          truth stay with their owning services and are referenced by ID only.
+        </p>
       </div>
     </main>
   );
