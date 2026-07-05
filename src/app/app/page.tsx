@@ -3,27 +3,27 @@
 // TEC Zone — the Verification Runtime of the Pi ecosystem (C-120). Zone answers
 // one question: "What can be trusted?" It records evidence and serves verified
 // status — it never renders judgement (trust interpretation is Analytics + TEC
-// AI). V0 = Portal-ready scaffold + Zone Pro payment surface; the verified
-// registry (Projects / Merchants / Builders) ships in V1, post-Portal.
+// AI, C-120 §4). V1 = a manually-curated static Verified Registry; the first
+// verified entities are the live TEC apps (dogfooding).
+import Link from 'next/link';
 import { usePiAuth } from '@yasser172/tec-auth';
 import { TEC_COLORS } from '@yasser172/tec-ui';
 import { ZonePro } from './components/ZonePro';
-
-const REGISTRY = [
-  { icon: '🏗️', title: 'Projects',  body: 'Pi ecosystem projects — TEC and non-TEC.' },
-  { icon: '🛍️', title: 'Merchants', body: 'Pi-accepting businesses, verified by evidence.' },
-  { icon: '👷', title: 'Builders',  body: 'Developers, founders, and contributors.' },
-];
+import { ENTITY_TYPES, listByType } from '@/lib/zone/registry';
 
 export default function ZoneHome() {
   const { user, isLoading } = usePiAuth();
   const name = user?.piUsername ? `@${user.piUsername}` : 'there';
 
-  const cardBase: React.CSSProperties = {
-    background:   TEC_COLORS.surface,
-    border:       `1px solid ${TEC_COLORS.gold}22`,
-    borderRadius: 14,
-    padding:      16,
+  const entityCard: React.CSSProperties = {
+    display: 'block', textDecoration: 'none',
+    background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}22`,
+    borderRadius: 12, padding: 14,
+  };
+  const badge: React.CSSProperties = {
+    fontSize: 10, fontWeight: 800, color: TEC_COLORS.gold,
+    border: `1px solid ${TEC_COLORS.gold}55`, borderRadius: 999, padding: '2px 8px',
+    whiteSpace: 'nowrap',
   };
 
   return (
@@ -44,28 +44,52 @@ export default function ZoneHome() {
         {/* Zone Pro — real Pi U2A payment (also the Pi Portal "Process a Transaction" step) */}
         <ZonePro />
 
-        {/* Verified Registry — ships in V1 (post-Portal). Honest placeholder. */}
+        {/* Verified Registry — V1 static registry (manual curation, C-120 §5). */}
         <section style={{ marginTop: 28 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
             <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: 0 }}>Verified Registry</h2>
-            <span style={{ fontSize: 11, color: TEC_COLORS.subtext, border: `1px solid ${TEC_COLORS.gold}33`, borderRadius: 999, padding: '2px 10px' }}>V1 · coming soon</span>
+            <span style={{ fontSize: 11, color: TEC_COLORS.gold, border: `1px solid ${TEC_COLORS.gold}33`, borderRadius: 999, padding: '2px 10px' }}>V1 · live</span>
           </div>
           <p style={{ fontSize: 12, color: TEC_COLORS.subtext, margin: '6px 0 14px', lineHeight: 1.5 }}>
-            After Portal submission, Zone lists verified entities. Verification is
-            evidence-based and human-reviewed — “Zone Verified” is earned, never bought.
+            Evidence-based, human-reviewed verification — “Zone Verified” is earned, never
+            bought (C-120 §7). Tap an entity to see its evidence.
           </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
-            {REGISTRY.map((r) => (
-              <div key={r.title} style={cardBase}>
-                <div style={{ fontSize: 20 }}>{r.icon}</div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: TEC_COLORS.text, marginTop: 6 }}>{r.title}</div>
-                <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 4, lineHeight: 1.5 }}>{r.body}</div>
+
+          {ENTITY_TYPES.map(({ type, icon, title, blurb }) => {
+            const entities = listByType(type);
+            return (
+              <div key={type} style={{ marginTop: 18 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 16 }}>{icon}</span>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: TEC_COLORS.text }}>{title}</span>
+                  <span style={{ fontSize: 11, color: TEC_COLORS.subtext }}>· {entities.length}</span>
+                </div>
+                <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '2px 0 10px' }}>{blurb}</p>
+
+                {entities.length === 0 ? (
+                  <div style={{ fontSize: 12, color: TEC_COLORS.subtext, fontStyle: 'italic', padding: '4px 0' }}>
+                    No verified {title.toLowerCase()} yet — verification opens with Commerce activity (V2).
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
+                    {entities.map((e) => (
+                      <Link key={e.id} href={`/verify/${e.id}`} style={entityCard}>
+                        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
+                          <span style={{ fontSize: 14, fontWeight: 800, color: TEC_COLORS.text }}>{e.name}</span>
+                          <span style={badge}>🛡️ Verified</span>
+                        </div>
+                        {e.domain && <div style={{ fontSize: 11, color: TEC_COLORS.gold, marginTop: 3 }}>{e.domain}</div>}
+                        <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 5, lineHeight: 1.5 }}>{e.summary}</div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
+            );
+          })}
         </section>
 
-        <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '22px 0 0', lineHeight: 1.5 }}>
+        <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '24px 0 0', lineHeight: 1.5 }}>
           Zone records evidence; it does not compute trust scores or render judgement —
           those belong to Analytics and TEC AI (C-120 §4). Identity, payment, and asset
           truth stay with their owning services and are referenced by ID only.
