@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import '@/styles/tec-design-tokens.css';
 
 export const metadata: Metadata = {
-  title:       'TEC Domain',
-  description: 'TEC Ecosystem — Pi Network Super App',
+  title:       'TEC Zone — Verification Runtime',
+  description: 'TEC Zone — the Verification Runtime of the Pi ecosystem. What can be trusted?',
 };
 
 export default function RootLayout({

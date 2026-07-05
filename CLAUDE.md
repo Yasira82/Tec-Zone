@@ -1,15 +1,80 @@
-# TEC Domain App Template — Claude Code Instructions
+# TEC Zone — Claude Code Instructions
 
-## What This Repo Is
+> ⚡ **SESSION START:** اقرأ `knowledge-base/C-02___CURRENT_STATE_.md` + **runtime charter
+> `knowledge-base/C-120___ZONE_CONSTITUTIONAL_RUNTIME_CHARTER.md`** من `yasira82/tec-knowledge-base` (branch: `main`).
 
-The **golden starter template** for a new app in the TEC Federated Platform.
-It ships a correct, Portal-ready skeleton: Hub SSO, dual-mode Pi payments,
-CSRF, legal pages, and CI policy guards. Clone it, run the "New app setup"
-checklist below, and you have a compliant app — no missing pieces.
+## What This App Is
 
-**Reference of record:** `yasira82/tec-knowledge-base` — especially
-`C-12_Dual_Mode_Payment.md` (payment + anti-regression) and
-`audits/PORTAL_SUBMISSION_RUNBOOK_*.md`.
+**The Verification Runtime** of the Pi ecosystem (C-120) — a **TIER 1 Constitutional
+Runtime**, the same constitutional level as Hub. Zone is NOT an app, a content
+platform, or a community portal. Zone answers one question:
+
+```
+"What can be trusted?"
+```
+
+Zone **records evidence** and serves verified status for the Pi ecosystem's
+Projects, Merchants, Builders, and Communities. It is consumed BY other runtimes
+(Hub → Zone → Analytics), not primarily by end users. `zone.pi` is a strategic
+asset — the potential Pi-ecosystem-wide verification standard.
+
+Built from `tec-template-base` (Next.js 15 frontend).
+
+**Current Phase: Zone V0 — App Scaffold & Portal Readiness (C-120 §5).** Identity /
+domain / slug / legal + themed home shell + **Zone Pro payment surface** (the Pi
+Portal "Process a Transaction" gate) done. The verified registry is **V1, post-Portal**.
+Not yet deployed.
+
+---
+
+## Pi App Identity
+
+| Field | Value |
+|-------|-------|
+| **App** | TEC Zone |
+| **Domain** | `https://zone.tecosystem.app` |
+| **Pi App ID** | ⏳ TBD — register at Pi Developer Portal · then Vercel `NEXT_PUBLIC_PI_APP_ID` |
+| **APP_SOURCE slug** | `zone` (payment-service resolves `PI_API_KEY_ZONE`) |
+| **PI_SANDBOX** | `false` (Mainnet) |
+
+---
+
+## Zone-Specific Rules (C-120)
+
+### The constitutional boundary — evidence vs judgement
+Zone **OWNS**: verified entities (Projects · Merchants · Builders · Communities),
+evidence records (append-only), verification audit trail, and institutional memory.
+Zone does **NOT OWN**:
+- **Trust score computation** → Analytics interprets the signals.
+- **Recommendations** → TEC AI reasons from Zone data.
+- **The relationship graph** → Connection (C-107).
+- **Identity / payment / asset truth** → auth / payment / asset services.
+
+```
+"Verified" = evidence confirmed.        (Zone)
+"Trusted"  = interpretation of evidence. (Analytics + TEC AI)
+Conflating them is an architectural violation (C-120 §4).
+```
+
+### Verification integrity (C-120 §7)
+- Human reviewers required; no automated verification without sign-off (two-reviewer
+  rule for institutional verifications).
+- Evidence is **append-only** — never deleted, only superseded; every decision logged
+  with reviewer + timestamp.
+- **"Zone Verified" cannot be purchased — only earned.** Zone Pro speeds the review
+  queue, never the verdict. Paid listings do not affect verification status.
+
+### Consistency model
+Zone verification reads = strong for the current verified status; the evidence
+timeline is append-only. Never present a verification as financial truth.
+
+### Isolation (P6)
+Derive identity from the `tec_user` session cookie server-side, **never** from a query
+param or request body. No session → fail closed.
+
+**Reference of record:** `yasira82/tec-knowledge-base` —
+`C-120___ZONE_CONSTITUTIONAL_RUNTIME_CHARTER.md` (charter) + `C-12_Dual_Mode_Payment.md`
+(payment anti-regression) + `C-123` (session/cookies) + `C-121` (knowledge pipeline).
 
 ---
 
@@ -43,11 +108,14 @@ if (isHubNavigation() || !(window as any).Pi || !piReady) {
 }
 // Mode 2: standalone — createPaymentRecord() then createU2APayment() (src/lib/pi-payment.ts)
 ```
+> The hub-entry signal is `__tec_hub_entry` (sessionStorage) **OR** referrer — the
+> landing page (C-123 LAW 2) made referrer-alone unreliable (C-12 §3). Do not remove it.
 
 ### ADR-009 — Unified payment contract
 `amount` is a **number**; gateway path is **`/api/payment/*`** (singular); the only
 inter-service header is **`x-internal-key`** + `INTERNAL_SECRET`. Don't re-declare
-payment Zod locally — shapes live in `@yasser172/tec-sdk`.
+payment Zod locally — shapes live in `@yasser172/tec-sdk`. Approve under
+`PI_API_KEY_ZONE` (never the default Hub key — the Analytics approve→502 lesson, C-12 §11).
 
 ### Two-SDK boundary
 ```
@@ -61,67 +129,56 @@ Identity is derived from the `tec_user` cookie server-side — **never from the 
 
 ---
 
-## What's included
+## Setup status + Roadmap (C-120 §5)
 
 ```
-middleware.ts                              CSRF (double-submit OR Origin) + page guard
-src/app/api/auth/sso-callback/route.ts     Hub SSO landing (open-redirect-safe)
-src/app/api/auth/refresh/route.ts          token refresh
-src/app/api/bff/payment/{create,approve,complete,resolve-incomplete}/route.ts
-src/app/api/bff/items/route.ts             example domain route (copy this pattern)
-src/app/api/health/route.ts                health endpoint (C-92/C-96) — fail-safe, public, never 500s
-src/lib/pi-payment.ts                      createPaymentRecord + createU2APayment
-src/lib/pi/PiRuntime.ts                    PAL — single choke-point for window.Pi.* (R1)
-src/lib/pi/PiCircuitBreaker.ts             CLOSED→OPEN→HALF_OPEN (3 fails → 60s)
-src/lib/flags.ts                           feature flags (NEXT_PUBLIC_FLAG_*) + useFlag
-src/lib/observability/logger.ts            structured JSON logger (log.info/warn/error) — no silent failures (C-96)
-src/lib/observability/reportError.ts       Sentry-ready error reporter (single swap-point)
-src/app/privacy/page.tsx · terms/page.tsx  Pi Portal legal pages
-src/styles/tec-design-tokens.css           import in app/layout.tsx
-.github/workflows/ci.yml                   payment-policy + CSRF guard + lint/typecheck/test/build
+Zone V0 — App Scaffold & Portal Readiness (customized from template):
+  ✅ package.json name = tec-zone · APP_SOURCE = 'zone'
+  ✅ sso-callback ALLOWED_AUDIENCES → zone.tecosystem.app + tec-zone.vercel.app
+  ✅ privacy + terms → TEC Zone / zone.tecosystem.app
+  ✅ NEW-A: no NEXT_PUBLIC_API_GATEWAY_URL / Railway host in the client bundle
+  ✅ layout Pi init is hub-entry-aware (C-12 §3 / ADR-007 foreign-session skip)
+  ✅ /app themed as the Zone home shell + Zone Pro (real Pi U2A payment surface)
+  ✅ payment-service: PI_API_KEY_ZONE registered (C-120 §5) — ops sets it on Railway
+
+Next (before live):
+  □ Register Pi App ID (Pi Developer Portal) → set Vercel NEXT_PUBLIC_PI_APP_ID +
+    API_GATEWAY_URL · INTERNAL_SECRET · SSO_SECRET · PI_SANDBOX=false.
+  □ Hub SSO: add zone.tecosystem.app + tec-zone.vercel.app to Hub /api/auth/sso
+    ALLOWED_TARGETS + Hub domain registry.
+  □ Deploy (Vercel) + runtime-verify login (C-123) + a real Zone Pro payment
+    Mode 1 (Hub) AND Mode 2 (standalone) — completes the Portal "Process a Transaction" gate.
+
+Zone V1+ (post-Portal — C-120 §5): static Verified Registry (Projects · Merchants ·
+  Builders) → Evidence Registry (V2) → Dynamic Trust Graph (V3, Connection) →
+  Ecosystem Intelligence Layer (V4). Trust scores are computed BY Analytics and
+  served BY Zone — Zone never computes them (C-120 §4).
 ```
 
-**v2 (production-ready by default):** every new app ships
-- `/api/health` — uniform C-92 signal (platform health runtime + observability scrape + SLO/runtime-evidence loop);
-- structured `log` + `reportError` — use `log.error`/`reportError` in catch blocks (a silent error handler is an invisible failure, C-96; `reportError` is the one place to wire Sentry per app);
-- `PiRuntime` (PAL) + `PiCircuitBreaker` — never call `window.Pi.*` directly; go through PiRuntime so an SDK change is a one-file fix (R1) and flapping is contained;
-- `flags.ts` — feature flags from day one (`NEXT_PUBLIC_FLAG_<NAME>`);
-- coverage gate — `npm run test:coverage` (add devDep `@vitest/coverage-v8`; 60% floor, raise as the app grows).
-
----
-
-## New app setup checklist
-
-```
-□ package.json: set "name"
-□ middleware.ts: adjust PROTECTED_ROUTES
-□ sso-callback/route.ts: set ALLOWED_AUDIENCES + DEFAULT_REDIRECT to your domain
-□ src/lib/pi-payment.ts + payment/create: set APP_SOURCE slug
-□ privacy/page.tsx + terms/page.tsx: set APP / DOMAIN / governing law / contacts
-□ Add ADR-007 isHubNavigation() guard to every buy handler
-□ .env: API_GATEWAY_URL · INTERNAL_SECRET · SSO_SECRET · NEXT_PUBLIC_PI_APP_ID · PI_SANDBOX=false (prod)
-□ Pi Developer Portal: register domain + App ID; set /privacy + /terms URLs
-□ Verify a real Pi payment Mode 1 (via Hub) AND Mode 2 (standalone)
-```
+> Zone monetization (C-120 §8) is subscription-style (Zone Pro / Enterprise). The
+> payment scaffold + `isHubNavigation()` guard are kept for the Portal gate and
+> optionality; any direct buy MUST keep the ADR-007 guard and needs `PI_API_KEY_ZONE`.
 
 ---
 
 ## What NOT To Do
 
+- Do NOT compute or present trust scores — Zone records evidence; Analytics/TEC AI judge (C-120 §4)
+- Do NOT let "Zone Verified" be purchasable — verification is evidence-based only (C-120 §7)
+- Do NOT delete evidence records — append-only, supersede instead
 - Do NOT validate CSRF in a route handler — middleware only (CI blocks it)
 - Do NOT send `amount` as a string, or use `/payments` / `x-service-secret`
 - Do NOT skip the ADR-007 `isHubNavigation()` guard before `window.Pi`
 - Do NOT store tokens in localStorage; do NOT derive identity from the body
 - Do NOT add `NEXT_PUBLIC_*` for internal service URLs or `INTERNAL_SECRET`
-- Do NOT use an open `redirect` param without the same-origin guard (open redirect)
 
 ---
 
 ## Commit Convention
 
 ```
-feat(scope):  new feature      fix(payment): payment flow fix (test carefully)
-fix(scope):   bug fix          chore(scope): build/config
+feat(zone):  new verification feature   fix(payment): payment flow fix (test carefully)
+fix(zone):   bug fix                     chore(scope):  build/config
 ```
 
 ---
