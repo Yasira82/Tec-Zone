@@ -12,7 +12,7 @@
 //   ✓ App/project accessible and functional
 //   ✓ No reported fraud
 
-export type EntityType = 'project' | 'merchant' | 'builder';
+export type EntityType = 'project' | 'merchant' | 'builder' | 'community';
 export type VerificationStatus = 'verified' | 'pending' | 'revoked';
 
 export interface EvidenceRecord {
@@ -82,6 +82,7 @@ export const ENTITY_TYPES: { type: EntityType; icon: string; title: string; blur
   { type: 'project',  icon: '🏗️', title: 'Projects',  blurb: 'Pi ecosystem projects — TEC and non-TEC.' },
   { type: 'merchant', icon: '🛍️', title: 'Merchants', blurb: 'Pi-accepting businesses, verified by evidence.' },
   { type: 'builder',  icon: '👷', title: 'Builders',  blurb: 'Developers, founders, and contributors.' },
+  { type: 'community', icon: '🤝', title: 'Communities', blurb: 'Verified Pi communities and collectives.' },
 ];
 
 export const listByType = (type: EntityType): VerifiedEntity[] =>
