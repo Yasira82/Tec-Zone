@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { usePiAuth } from '@yasser172/tec-auth';
 import { TEC_COLORS } from '@yasser172/tec-ui';
 import { ZonePro } from './components/ZonePro';
+import { VerificationPanel } from './components/VerificationPanel';
 import { ENTITY_TYPES, REGISTRY } from '@/lib/zone/registry';
 
 // Flat entity shape served by /api/bff/zone/registry (real backend, sample fallback).
@@ -26,7 +27,7 @@ const initialEntities: RegistryEntity[] = REGISTRY.map((e) => ({
 }));
 
 export default function ZoneHome() {
-  const { user, isLoading } = usePiAuth();
+  const { user, isLoading, isAuthenticated } = usePiAuth();
   const name = user?.piUsername ? `@${user.piUsername}` : 'there';
 
   const [entities, setEntities] = useState<RegistryEntity[]>(initialEntities);
@@ -73,6 +74,9 @@ export default function ZoneHome() {
 
         {/* Zone Pro — real Pi U2A payment (also the Pi Portal "Process a Transaction" step) */}
         <ZonePro />
+
+        {/* Verification workflow (C-120 §7) — apply + attach evidence (signed-in only). */}
+        <VerificationPanel isAuth={isAuthenticated} />
 
         {/* Verified Registry — V1 static registry (manual curation, C-120 §5). */}
         <section style={{ marginTop: 28 }}>
