@@ -11,6 +11,7 @@ import { usePiAuth } from '@yasser172/tec-auth';
 import { TEC_COLORS } from '@yasser172/tec-ui';
 import { ZonePro } from './components/ZonePro';
 import { VerificationPanel } from './components/VerificationPanel';
+import { ReviewPanel } from './components/ReviewPanel';
 import { ENTITY_TYPES, REGISTRY } from '@/lib/zone/registry';
 
 // Flat entity shape served by /api/bff/zone/registry (real backend, sample fallback).
@@ -77,6 +78,9 @@ export default function ZoneHome() {
 
         {/* Verification workflow (C-120 §7) — apply + attach evidence (signed-in only). */}
         <VerificationPanel isAuth={isAuthenticated} />
+
+        {/* Reviewer console (C-120 §7) — admin-only; hidden unless the queue loads. */}
+        <ReviewPanel isAuth={isAuthenticated} />
 
         {/* Verified Registry — V1 static registry (manual curation, C-120 §5). */}
         <section style={{ marginTop: 28 }}>

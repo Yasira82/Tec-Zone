@@ -135,3 +135,30 @@ describe('PATCH /api/bff/zone/entity/:handle/review (reviewer decision)', () => 
     expect(global.fetch).not.toHaveBeenCalled();
   });
 });
+
+describe('GET /api/bff/zone/review/queue (admin review queue)', () => {
+  it('returns 401 without a token', async () => {
+    const { GET } = await import('@/app/api/bff/zone/review/queue/route');
+    const res = await GET(makeReq({ method: 'GET' }));
+    expect(res.status).toBe(401);
+  });
+
+  it('forwards the JWT and returns the queue for an admin', async () => {
+    global.fetch = vi.fn().mockResolvedValue(okJson({ queue: [{ handle: 'pi-cafe', status: 'PENDING' }] }));
+    const { GET } = await import('@/app/api/bff/zone/review/queue/route');
+    const res  = await GET(makeReq({ method: 'GET', cookies: { tec_access_token: 'jwt-admin' } }));
+    const data = await res.json();
+    expect(res.status).toBe(200);
+    expect(data.queue[0].handle).toBe('pi-cafe');
+    const [url, init] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit & { headers: Record<string, string> }];
+    expect(url).toBe(`${GW}/api/identity/zone/review/queue`);
+    expect(init.headers.Authorization).toBe('Bearer jwt-admin');
+  });
+
+  it('passes a backend 403 (non-admin) through so the UI hides the panel', async () => {
+    global.fetch = vi.fn().mockResolvedValue(errJson('Reviewer role required', 403));
+    const { GET } = await import('@/app/api/bff/zone/review/queue/route');
+    const res = await GET(makeReq({ method: 'GET', cookies: { tec_access_token: 'jwt-user' } }));
+    expect(res.status).toBe(403);
+  });
+});

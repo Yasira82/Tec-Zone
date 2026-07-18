@@ -43,6 +43,10 @@ async function call(
 export const listMySubmissions = (token: string) =>
   call('/api/identity/zone/my/submissions', token, 'GET');
 
+/** The PENDING review queue (ADMIN only — the backend returns 403 for non-admins). */
+export const listReviewQueue = (token: string) =>
+  call('/api/identity/zone/review/queue', token, 'GET');
+
 /** Submit an entity for verification (starts PENDING — never self-verified, C-120 §7). */
 export const submitVerification = (
   token: string, body: { type: string; name: string; summary?: string; note?: string },
