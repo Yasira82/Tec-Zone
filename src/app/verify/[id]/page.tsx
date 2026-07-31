@@ -3,32 +3,24 @@
 // can browse verified entities and their evidence. Zone records evidence — it
 // does not render a trust score (C-120 §4).
 import Link from 'next/link';
-import type { Metadata } from 'next';
 import { TEC_COLORS } from '@yasser172/tec-ui';
-import { getEntity, REGISTRY } from '@/lib/zone/registry';
+import { resolvePublicEntity } from '@/lib/zone/server';
 
-export function generateStaticParams() {
-  return REGISTRY.map((e) => ({ id: e.id }));
-}
-
-export async function generateMetadata(
-  { params }: { params: Promise<{ id: string }> },
-): Promise<Metadata> {
-  const { id } = await params;
-  const entity = getEntity(id);
-  const title = entity ? `${entity.name} — Zone Verified` : 'Zone — Verify';
-  return { title, description: entity?.summary ?? 'TEC Zone verification.' };
-}
+// Rendered dynamically from the live Zone read-layer — "Zone Verified" is a factual
+// claim backed by evidence and is NEVER served from a static sample (C-120 §4 /
+// C-135 §4): a live 404 is "not in the registry"; an unreachable backend is an
+// honest "temporarily unavailable".
+export const dynamic = 'force-dynamic';
 
 const TYPE_LABEL: Record<string, string> = {
-  project: 'Project', merchant: 'Merchant', builder: 'Builder',
+  project: 'Project', merchant: 'Merchant', builder: 'Builder', community: 'Community',
 };
 
 export default async function VerifyPage(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const entity = getEntity(id);
+  const { entity, source } = await resolvePublicEntity(id);
 
   const wrap: React.CSSProperties = {
     minHeight: '100vh', background: TEC_COLORS.bg, color: TEC_COLORS.text,
@@ -37,14 +29,18 @@ export default async function VerifyPage(
   const inner: React.CSSProperties = { maxWidth: 680, margin: '0 auto' };
 
   if (!entity) {
+    const unavailable = source === 'unavailable';
     return (
       <main style={wrap}>
         <div style={inner}>
           <Link href="/app" style={{ fontSize: 13, color: TEC_COLORS.gold, textDecoration: 'none' }}>← Verified Registry</Link>
-          <h1 style={{ fontSize: 22, fontWeight: 900, color: TEC_COLORS.text, marginTop: 16 }}>Not in the registry</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 900, color: TEC_COLORS.text, marginTop: 16 }}>
+            {unavailable ? 'Registry temporarily unavailable' : 'Not in the registry'}
+          </h1>
           <p style={{ fontSize: 13, color: TEC_COLORS.subtext, lineHeight: 1.6 }}>
-            No verified entity with id <code>{id}</code>. A missing record is not a
-            negative verdict — Zone only asserts what evidence confirms (C-120 §4).
+            {unavailable
+              ? <>The Zone verification service is unavailable right now. Please try again shortly — Zone never shows an entity as verified without live evidence.</>
+              : <>No verified entity with id <code>{id}</code>. A missing record is not a negative verdict — Zone only asserts what evidence confirms (C-120 §4).</>}
           </p>
         </div>
       </main>

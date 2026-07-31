@@ -12,38 +12,38 @@ import { TEC_COLORS } from '@yasser172/tec-ui';
 import { ZonePro } from './components/ZonePro';
 import { VerificationPanel } from './components/VerificationPanel';
 import { ReviewPanel } from './components/ReviewPanel';
-import { ENTITY_TYPES, REGISTRY } from '@/lib/zone/registry';
+import { ENTITY_TYPES } from '@/lib/zone/registry';
 
-// Flat entity shape served by /api/bff/zone/registry (real backend, sample fallback).
+// Flat entity shape served by /api/bff/zone/registry (real backend).
 interface RegistryEntity {
   id: string; type: string; name: string; summary: string;
   status: string; verifiedAt: string | null; evidenceCount: number; domain?: string;
 }
 
-// Initial state = the curated static registry (renders instantly / SSR), replaced
-// by the live backend registry once the BFF responds.
-const initialEntities: RegistryEntity[] = REGISTRY.map((e) => ({
-  id: e.id, type: e.type, name: e.name, summary: e.summary,
-  status: e.status, verifiedAt: e.verifiedAt, evidenceCount: e.evidence.length, domain: e.domain,
-}));
-
 export default function ZoneHome() {
   const { user, isLoading, isAuthenticated } = usePiAuth();
   const name = user?.piUsername ? `@${user.piUsername}` : 'there';
 
-  const [entities, setEntities] = useState<RegistryEntity[]>(initialEntities);
-  const [source, setSource]     = useState<'sample' | 'live'>('sample');
+  // Real data end-to-end (C-135 §4): "Zone Verified" is a factual claim — the
+  // registry shows only live verified entities, or an honest "unavailable" state.
+  // It NEVER renders a static sample presented as verified.
+  const [entities, setEntities] = useState<RegistryEntity[]>([]);
+  const [status, setStatus]     = useState<'loading' | 'ready' | 'unavailable'>('loading');
 
   useEffect(() => {
     let alive = true;
     fetch('/api/bff/zone/registry')
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
-        if (!alive || !d?.entities) return;
-        setEntities(d.entities as RegistryEntity[]);
-        setSource(d.source === 'live' ? 'live' : 'sample');
+        if (!alive) return;
+        if (d && d.source === 'live' && Array.isArray(d.entities)) {
+          setEntities(d.entities as RegistryEntity[]);
+          setStatus('ready');
+        } else {
+          setStatus('unavailable');
+        }
       })
-      .catch(() => { /* keep the static registry */ });
+      .catch(() => { if (alive) setStatus('unavailable'); });
     return () => { alive = false; };
   }, []);
 
@@ -86,14 +86,26 @@ export default function ZoneHome() {
         <section style={{ marginTop: 28 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
             <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: 0 }}>Verified Registry</h2>
-            <span style={{ fontSize: 11, color: TEC_COLORS.gold, border: `1px solid ${TEC_COLORS.gold}33`, borderRadius: 999, padding: '2px 10px' }}>V1 · {source === 'live' ? 'live registry' : 'sample'}</span>
+            {status === 'ready' && (
+              <span style={{ fontSize: 11, color: TEC_COLORS.gold, border: `1px solid ${TEC_COLORS.gold}33`, borderRadius: 999, padding: '2px 10px' }}>V1 · live registry</span>
+            )}
           </div>
           <p style={{ fontSize: 12, color: TEC_COLORS.subtext, margin: '6px 0 14px', lineHeight: 1.5 }}>
             Evidence-based, human-reviewed verification — “Zone Verified” is earned, never
             bought (C-120 §7). Tap an entity to see its evidence.
           </p>
 
-          {ENTITY_TYPES.map(({ type, icon, title, blurb }) => {
+          {status === 'loading' && (
+            <div style={{ fontSize: 13, color: TEC_COLORS.subtext, padding: '20px 0', textAlign: 'center' }}>Loading the verified registry…</div>
+          )}
+          {status === 'unavailable' && (
+            <div style={{ background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}22`, borderRadius: 12, padding: 20, textAlign: 'center', color: TEC_COLORS.subtext, fontSize: 13 }}>
+              The verified registry is unavailable right now. Please try again shortly — Zone never shows
+              unconfirmed entities as verified.
+            </div>
+          )}
+
+          {status === 'ready' && ENTITY_TYPES.map(({ type, icon, title, blurb }) => {
             const group = entities.filter((e) => e.type === type);
             return (
               <div key={type} style={{ marginTop: 18 }}>
