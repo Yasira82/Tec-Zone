@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
-import { REGISTRY } from '@/lib/zone/registry';
 
 // GET /api/bff/zone/registry — the public verified registry (C-120).
 // Server-only: calls the real Zone backend (zone module in identity-service) via
 // the gateway. Zone verified status is PUBLIC (consumed by Hub → Zone → Analytics),
-// so no auth is required — only the inter-service key. Falls back to the curated
-// static registry (C-120 §5) if the backend is unreachable, so the app degrades
-// gracefully. NEW-A: the gateway URL is server-only (API_GATEWAY_URL), never shipped.
+// so no auth is required — only the inter-service key. Real data end-to-end
+// (C-135 §4): "Zone Verified" is a factual claim backed by evidence — it must NEVER
+// be fabricated, so an unreachable backend returns source:'unavailable' with an
+// empty registry (honest state), never a static sample presented as verified.
+// NEW-A: the gateway URL is server-only (API_GATEWAY_URL), never shipped.
 const GW = process.env.API_GATEWAY_URL ?? '';
 
 const gwHeaders = () => ({
@@ -33,12 +34,6 @@ function fromBackend(e: Record<string, unknown>): Entity {
   };
 }
 
-const sampleEntities = (): Entity[] =>
-  REGISTRY.map((e) => ({
-    id: e.id, type: e.type, name: e.name, summary: e.summary,
-    status: e.status, verifiedAt: e.verifiedAt, evidenceCount: e.evidence.length,
-  }));
-
 export async function GET() {
   if (GW) {
     try {
@@ -46,17 +41,17 @@ export async function GET() {
       if (res.ok) {
         const data = await res.json().catch(() => ({}));
         const raw  = (data?.data?.entities ?? []) as Record<string, unknown>[];
-        if (Array.isArray(raw) && raw.length) {
+        if (Array.isArray(raw)) {
           return NextResponse.json(
             { source: 'live', entities: raw.map(fromBackend) },
             { headers: { 'Cache-Control': 'public, max-age=60' } },
           );
         }
       }
-    } catch { /* fall through to the curated static registry */ }
+    } catch { /* unreachable → unavailable below */ }
   }
   return NextResponse.json(
-    { source: 'sample', entities: sampleEntities() },
-    { headers: { 'Cache-Control': 'public, max-age=60' } },
+    { source: 'unavailable', entities: [] },
+    { headers: { 'Cache-Control': 'no-store' } },
   );
 }
