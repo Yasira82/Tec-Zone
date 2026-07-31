@@ -6,6 +6,7 @@
 // AI, C-120 §4). V1 = a manually-curated static Verified Registry; the first
 // verified entities are the live TEC apps (dogfooding).
 import { useEffect, useState } from 'react';
+import { InviteCard } from '@/components/referral/InviteCard';
 import Link from 'next/link';
 import { usePiAuth } from '@yasser172/tec-auth';
 import { TEC_COLORS } from '@yasser172/tec-ui';
@@ -149,6 +150,7 @@ export default function ZoneHome() {
           those belong to Analytics and TEC AI (C-120 §4). Identity, payment, and asset
           truth stay with their owning services and are referenced by ID only.
         </p>
+        <InviteCard />
       </div>
     </main>
   );
