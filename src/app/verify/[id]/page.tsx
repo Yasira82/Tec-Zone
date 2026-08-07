@@ -5,6 +5,7 @@
 import Link from 'next/link';
 import { TEC_COLORS } from '@yasser172/tec-ui';
 import { resolvePublicEntity } from '@/lib/zone/server';
+import ShareBadge from './ShareBadge';
 
 // Rendered dynamically from the live Zone read-layer — "Zone Verified" is a factual
 // claim backed by evidence and is NEVER served from a static sample (C-120 §4 /
@@ -77,6 +78,10 @@ export default async function VerifyPage(
         {entity.verifiedAt && (
           <p style={{ fontSize: 12, color: TEC_COLORS.subtext, margin: '8px 0 0' }}>Verified {entity.verifiedAt}</p>
         )}
+
+        {/* Share / embed — only a genuinely verified entity may broadcast the badge
+            (C-120 §7 — earned, never bought). This is Zone's reach into all of Pi. */}
+        {verified && <ShareBadge handle={entity.id} />}
 
         <h2 style={{ fontSize: 15, fontWeight: 800, color: TEC_COLORS.text, margin: '26px 0 4px' }}>Evidence</h2>
         <p style={{ fontSize: 12, color: TEC_COLORS.subtext, margin: '0 0 14px', lineHeight: 1.5 }}>
