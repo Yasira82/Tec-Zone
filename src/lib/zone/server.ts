@@ -90,6 +90,37 @@ export async function resolvePublicEntity(
   return { entity: null, source: 'unavailable' };
 }
 
+// ── Public Trust Check (the interactive "what can be trusted?" — no auth) ─────
+export interface LookupHit {
+  handle: string; type: string; name: string; summary: string;
+  status: string; verifiedAt: string | null; evidenceCount: number;
+}
+
+/** Verified-first search over the live registry. Public read (C-120 §4 — reads are public). */
+export async function searchZone(query: string): Promise<{ ok: boolean; results: LookupHit[] }> {
+  const q = query.trim();
+  if (!GW || q.length < 1) return { ok: !!GW, results: [] };
+  try {
+    const res = await fetch(`${GW}/api/identity/zone/lookup?q=${encodeURIComponent(q)}`, {
+      headers: gwHeaders(), cache: 'no-store',
+    });
+    if (!res.ok) return { ok: false, results: [] };
+    const rows = ((await res.json().catch(() => ({})))?.data?.results ?? []) as Record<string, unknown>[];
+    return {
+      ok: true,
+      results: rows.map((e): LookupHit => ({
+        handle:        String(e.handle ?? ''),
+        type:          String(e.type ?? '').toLowerCase(),
+        name:          String(e.name ?? ''),
+        summary:       String(e.summary ?? ''),
+        status:        String(e.status ?? '').toLowerCase(),
+        verifiedAt:    e.verified_at ? day(e.verified_at) : null,
+        evidenceCount: Number((e as { _count?: { evidence?: number } })._count?.evidence ?? 0),
+      })),
+    };
+  } catch { return { ok: false, results: [] }; }
+}
+
 /** The caller's OWN verification submissions. */
 export const listMySubmissions = (token: string) =>
   call('/api/identity/zone/my/submissions', token, 'GET');
