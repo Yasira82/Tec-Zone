@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { usePiAuth } from '@yasser172/tec-auth';
 import { TEC_COLORS } from '@yasser172/tec-ui';
 import { ZonePro } from './components/ZonePro';
+import { TrustCheck } from './components/TrustCheck';
 import { VerificationPanel } from './components/VerificationPanel';
 import { ReviewPanel } from './components/ReviewPanel';
 import { ENTITY_TYPES } from '@/lib/zone/registry';
@@ -73,6 +74,9 @@ export default function ZoneHome() {
             recording evidence, not by claiming authority (C-120).
           </p>
         </header>
+
+        {/* Trust Check — the interactive headline: "is X Zone Verified?" (public read). */}
+        <TrustCheck />
 
         {/* Zone Pro — real Pi U2A payment (also the Pi Portal "Process a Transaction" step) */}
         <ZonePro />
