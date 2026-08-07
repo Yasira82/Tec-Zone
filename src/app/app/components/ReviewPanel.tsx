@@ -15,7 +15,9 @@ interface QueueItem {
   owner?: string | null; evidence?: Evidence[];
 }
 
-export function ReviewPanel({ isAuth }: { isAuth: boolean }) {
+// `isAuth` is accepted for API compatibility with the caller but intentionally not
+// used to gate the load — see the note on the effect below (C-123).
+export function ReviewPanel(_props: { isAuth: boolean }) {
   const [queue, setQueue]   = useState<QueueItem[] | null>(null);
   const [isAdmin, setAdmin] = useState(false);
 
@@ -29,9 +31,14 @@ export function ReviewPanel({ isAuth }: { isAuth: boolean }) {
     } catch { setAdmin(false); }
   }
 
-  useEffect(() => { if (isAuth) load(); }, [isAuth]);
+  // Always attempt the load — do NOT gate on the client-side `isAuth` flag, which is
+  // unreliable in Pi Browser (the C-123 session saga): a genuine ADMIN could be logged
+  // in yet have isAuth=false and never see the queue. Authorization is decided
+  // server-side — the BFF forwards the session cookie and the backend returns 403 for a
+  // non-admin, so the panel simply stays hidden (setAdmin(false)) unless the queue loads.
+  useEffect(() => { load(); }, []);
 
-  if (!isAuth || !isAdmin) return null;
+  if (!isAdmin) return null;
 
   return (
     <section style={{ marginTop: 28 }}>
