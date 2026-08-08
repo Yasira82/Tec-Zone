@@ -129,10 +129,32 @@ export const listMySubmissions = (token: string) =>
 export const listReviewQueue = (token: string) =>
   call('/api/identity/zone/review/queue', token, 'GET');
 
-/** Submit an entity for verification (starts PENDING — never self-verified, C-120 §7). */
+/** Submit an entity for verification (starts PENDING — never self-verified, C-120 §7).
+ * `priority` (Zone Pro) only speeds the review QUEUE, never the verdict — set by the
+ * BFF from the caller's live subscription. */
 export const submitVerification = (
-  token: string, body: { type: string; name: string; summary?: string; note?: string },
+  token: string, body: { type: string; name: string; summary?: string; note?: string; priority?: boolean },
 ) => call('/api/identity/zone/verification', token, 'POST', body);
+
+// The caller's live subscription (Pro?) — read from commerce (the Subscription owner,
+// C-47). Zone never sells Pro nor stores subscription truth (P5); it reads and reflects.
+export async function resolveProStatus(token: string): Promise<boolean> {
+  if (!GW) return false;
+  try {
+    const res = await fetch(`${GW}/api/commerce/subscriptions/status`, {
+      headers: gwHeaders(token), cache: 'no-store',
+    });
+    if (!res.ok) return false;
+    const d = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    const s = (d.data ?? d) as Record<string, unknown>;
+    const plan = String(s.plan ?? s.tier ?? '').toUpperCase();
+    const active  = s.isActive === true || s.active === true || (plan !== '' && plan !== 'FREE');
+    const expired = s.isExpired === true;
+    const end     = s.current_period_end ?? s.currentPeriodEnd ?? s.expires_at;
+    const notExpired = !expired && (!end || new Date(String(end)).getTime() > Date.now());
+    return active && notExpired && plan !== '' && plan !== 'FREE';
+  } catch { return false; }
+}
 
 /** Append append-only supporting evidence to the caller's own PENDING submission. */
 export const appendEvidence = (

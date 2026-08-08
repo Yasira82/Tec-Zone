@@ -12,7 +12,7 @@ import { buildHeaders } from '@/lib/request-id';
 interface Evidence { kind: string; note: string; source: string; created_at?: string }
 interface QueueItem {
   handle: string; type: string; name: string; summary?: string | null;
-  owner?: string | null; evidence?: Evidence[];
+  owner?: string | null; evidence?: Evidence[]; priority?: boolean;
 }
 
 // `isAuth` is accepted for API compatibility with the caller but intentionally not
@@ -97,6 +97,11 @@ function ReviewRow({ item, onDone }: { item: QueueItem; onDone: () => void }) {
           {item.name} <span style={{ fontSize: 11, fontWeight: 400, color: TEC_COLORS.subtext }}>@{item.handle} · {item.type?.toLowerCase()}</span>
         </span>
         {item.owner && <span style={{ fontSize: 10.5, color: TEC_COLORS.subtext }}>by {item.owner}</span>}
+        {item.priority && (
+          <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 800, color: TEC_COLORS.gold, border: `1px solid ${TEC_COLORS.gold}55`, borderRadius: 999, padding: '1px 7px' }}>
+            ⭐ Priority (Pro)
+          </span>
+        )}
       </div>
       {item.summary && <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 4 }}>{item.summary}</div>}
 
