@@ -134,8 +134,9 @@ export function ZonePro() {
     return (
       <div style={{ ...card, borderColor: `${TEC_COLORS.success}66` }}>
         <div style={{ fontSize: 15, fontWeight: 800, color: TEC_COLORS.success }}>✅ Zone Pro active</div>
-        <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 6 }}>
-          Payment received. Thanks for supporting TEC Zone 🛡️.
+        <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 6, lineHeight: 1.5 }}>
+          Payment received. Your next verification request gets <strong style={{ color: TEC_COLORS.gold }}>priority review</strong> —
+          it jumps the queue so a reviewer sees it sooner. (Speed only — the verdict is still evidence-based, C-120 §7.)
         </div>
       </div>
     );
