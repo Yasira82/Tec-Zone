@@ -50,7 +50,12 @@ describe('POST /api/bff/zone/verification (submit)', () => {
       body:    { type: 'merchant', name: 'Pi Cafe', summary: 'coffee in Pi' },
     }));
     expect(res.status).toBe(201);
-    const [url, init] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit & { headers: Record<string, string> }];
+    // The BFF first reads the caller's live subscription (Zone Pro → priority, C-120 §7),
+    // then submits — so target the submit call by URL, not a fixed call index.
+    const calls = (global.fetch as ReturnType<typeof vi.fn>).mock.calls as [string, RequestInit & { headers: Record<string, string> }][];
+    const submit = calls.find(([u]) => u.endsWith('/api/identity/zone/verification'));
+    expect(submit).toBeDefined();
+    const [url, init] = submit!;
     expect(url).toBe(`${GW}/api/identity/zone/verification`);
     expect(init.headers.Authorization).toBe('Bearer jwt-123');
     expect(init.headers['x-internal-key']).toBe('secret');
