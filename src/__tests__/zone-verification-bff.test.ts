@@ -64,6 +64,21 @@ describe('POST /api/bff/zone/verification (submit)', () => {
     expect(sent.owner).toBeUndefined();
   });
 
+  it('sends priority:true for a live Pro caller (unwraps { data: { subscription } }, C-120 §7)', async () => {
+    // (1) commerce subscription = PRO in the REAL nested shape · (2) submit 201. The prior
+    // bug read s.plan on { data: { subscription } } (undefined → FREE) so Pro callers never
+    // got queue priority. Zone Pro speeds the queue, never the verdict.
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce(okJson({ subscription: { plan: 'PRO', isActive: true, isExpired: false } }))
+      .mockResolvedValueOnce(okJson({ entity: { handle: 'pi-cafe', status: 'PENDING' } }, 201));
+    const { POST } = await import('@/app/api/bff/zone/verification/route');
+    const res = await POST(makeReq({ cookies: { tec_access_token: 'jwt-123' }, body: { type: 'merchant', name: 'Pi Cafe' } }));
+    expect(res.status).toBe(201);
+    const calls = (global.fetch as ReturnType<typeof vi.fn>).mock.calls as [string, RequestInit][];
+    const submit = calls.find(([u]) => String(u).endsWith('/api/identity/zone/verification'));
+    expect(JSON.parse(submit![1].body as string).priority).toBe(true);
+  });
+
   it('rejects an invalid type at the BFF (no backend call)', async () => {
     global.fetch = vi.fn();
     const { POST } = await import('@/app/api/bff/zone/verification/route');
