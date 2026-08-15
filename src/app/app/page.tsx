@@ -71,7 +71,7 @@ export default function ZoneHome() {
           <p style={{ fontSize: 14, color: TEC_COLORS.subtext, margin: '6px 0 0', lineHeight: 1.6 }}>
             The trust layer of the Pi ecosystem. Zone answers one question —
             <strong style={{ color: TEC_COLORS.text }}> “What can be trusted?”</strong> — by
-            recording evidence, not by claiming authority (C-120).
+            recording evidence, not by claiming authority.
           </p>
         </header>
 
@@ -97,7 +97,7 @@ export default function ZoneHome() {
           </div>
           <p style={{ fontSize: 12, color: TEC_COLORS.subtext, margin: '6px 0 14px', lineHeight: 1.5 }}>
             Evidence-based, human-reviewed verification — “Zone Verified” is earned, never
-            bought (C-120 §7). Tap an entity to see its evidence.
+            bought. Tap an entity to see its evidence.
           </p>
 
           {status === 'loading' && (
@@ -151,7 +151,7 @@ export default function ZoneHome() {
 
         <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '24px 0 0', lineHeight: 1.5 }}>
           Zone records evidence; it does not compute trust scores or render judgement —
-          those belong to Analytics and TEC AI (C-120 §4). Identity, payment, and asset
+          those belong to Analytics and TEC AI. Identity, payment, and asset
           truth stay with their owning services and are referenced by ID only.
         </p>
         <InviteCard />

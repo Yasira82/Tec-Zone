@@ -167,7 +167,7 @@ export function ZonePro() {
       <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 8, lineHeight: 1.5 }}>
         For builders and merchants — priority verification review, a detailed
         evidence report, and an embeddable Zone Verified badge. Verification is
-        evidence-based and cannot be purchased (C-120 §7) — Pro only speeds the
+        evidence-based and cannot be purchased — Pro only speeds the
         review, never the verdict.
       </div>
 
