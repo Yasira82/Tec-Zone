@@ -104,9 +104,7 @@ export default async function VerifyPage(
         </div>
 
         <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '22px 0 0', lineHeight: 1.5 }}>
-          “Verified” = evidence confirmed. “Trusted” is the interpretation of that evidence
-          by Analytics and TEC AI — a different function. This page is the
-          evidence, not a score.
+          “Verified” = evidence confirmed. “Trusted” is how others interpret that evidence. This page shows the evidence itself.
         </p>
       </div>
     </main>

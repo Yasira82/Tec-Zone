@@ -64,7 +64,7 @@ export default function ZoneHome() {
     <main style={{ minHeight: '100vh', background: TEC_COLORS.bg, color: TEC_COLORS.text, padding: '32px 22px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <div style={{ maxWidth: 760, margin: '0 auto' }}>
         <header>
-          <div style={{ fontSize: 12, letterSpacing: 1, color: TEC_COLORS.subtext, textTransform: 'uppercase' }}>TEC Zone · Verification Runtime</div>
+          <div style={{ fontSize: 12, letterSpacing: 1, color: TEC_COLORS.subtext, textTransform: 'uppercase' }}>TEC Zone · Verification</div>
           <h1 style={{ fontSize: 26, fontWeight: 900, color: TEC_COLORS.gold, margin: '6px 0 0' }}>
             {isLoading ? 'Welcome' : `Welcome, ${name}`}
           </h1>
@@ -150,9 +150,8 @@ export default function ZoneHome() {
         </section>
 
         <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '24px 0 0', lineHeight: 1.5 }}>
-          Zone records evidence; it does not compute trust scores or render judgement —
-          those belong to Analytics and TEC AI. Identity, payment, and asset
-          truth stay with their owning services and are referenced by ID only.
+          Zone records verified evidence — the facts behind what can be trusted.
+          Verification is earned from evidence, never bought.
         </p>
         <InviteCard />
       </div>

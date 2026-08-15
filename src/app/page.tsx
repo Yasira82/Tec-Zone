@@ -39,7 +39,7 @@ export default function HomePage() {
       <div style={{ textAlign: 'center', maxWidth: 420 }}>
         <div style={{ fontSize: 52, marginBottom: 16 }}>{APP_EMOJI}</div>
         <div style={{ fontSize: 12, letterSpacing: 1.5, color: TEC_COLORS.subtext, textTransform: 'uppercase' }}>
-          TEC · Verification Runtime
+          TEC · Verification
         </div>
         <div style={{ fontSize: 26, fontWeight: 900, color: TEC_COLORS.gold, margin: '6px 0 8px' }}>
           {APP_NAME}
