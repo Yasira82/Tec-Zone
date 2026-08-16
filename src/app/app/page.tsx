@@ -24,7 +24,7 @@ interface RegistryEntity {
 
 export default function ZoneHome() {
   const { user, isLoading, isAuthenticated } = usePiAuth();
-  const name = user?.piUsername ? `@${user.piUsername}` : 'there';
+  const name = user?.piUsername ? `@${user.piUsername}` : '';
 
   // Real data end-to-end (C-135 §4): "Zone Verified" is a factual claim — the
   // registry shows only live verified entities, or an honest "unavailable" state.
@@ -66,7 +66,7 @@ export default function ZoneHome() {
         <header>
           <div style={{ fontSize: 12, letterSpacing: 1, color: TEC_COLORS.subtext, textTransform: 'uppercase' }}>TEC Zone · Verification</div>
           <h1 style={{ fontSize: 26, fontWeight: 900, color: TEC_COLORS.gold, margin: '6px 0 0' }}>
-            {isLoading ? 'Welcome' : `Welcome, ${name}`}
+            {isLoading || !name ? 'Welcome' : `Welcome, ${name}`}
           </h1>
           <p style={{ fontSize: 14, color: TEC_COLORS.subtext, margin: '6px 0 0', lineHeight: 1.6 }}>
             The trust layer of the Pi ecosystem. Zone answers one question —
