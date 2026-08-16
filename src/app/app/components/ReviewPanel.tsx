@@ -50,7 +50,7 @@ export function ReviewPanel(_props: { isAuth: boolean }) {
       </div>
       <p style={{ fontSize: 12, color: TEC_COLORS.subtext, margin: '6px 0 12px', lineHeight: 1.5 }}>
         Read the evidence, then verify or revoke with a note. You may not decide your own
-        submission (separation of duties, C-120 §7).
+        submission — a fair, independent review.
       </p>
 
       {queue && queue.length === 0 && (

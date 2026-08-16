@@ -85,7 +85,7 @@ export function VerificationPanel({ isAuth }: { isAuth: boolean }) {
       <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: '0 0 4px' }}>Apply for verification</h2>
       <p style={{ fontSize: 12, color: TEC_COLORS.subtext, margin: '0 0 12px', lineHeight: 1.5 }}>
         Submit your entity, then attach evidence. A human reviewer decides — verification
-        is <strong style={{ color: TEC_COLORS.text }}>earned, never bought</strong> (C-120 §7).
+        is <strong style={{ color: TEC_COLORS.text }}>earned, never bought</strong>.
       </p>
 
       {/* My submissions */}

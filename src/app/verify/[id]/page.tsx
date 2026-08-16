@@ -40,8 +40,8 @@ export default async function VerifyPage(
           </h1>
           <p style={{ fontSize: 13, color: TEC_COLORS.subtext, lineHeight: 1.6 }}>
             {unavailable
-              ? <>The Zone verification service is unavailable right now. Please try again shortly — Zone never shows an entity as verified without live evidence.</>
-              : <>No verified entity with id <code>{id}</code>. A missing record is not a negative verdict — Zone only asserts what evidence confirms (C-120 §4).</>}
+              ? <>The Zone verification service is unavailable right now. Please try again shortly — Zone never shows an entity as verified without live evidence.</>:
+              <>No verified entity with id <code>{id}</code>. A missing record is not a negative verdict — Zone only asserts what evidence confirms.</>}
           </p>
         </div>
       </main>
@@ -85,7 +85,7 @@ export default async function VerifyPage(
 
         <h2 style={{ fontSize: 15, fontWeight: 800, color: TEC_COLORS.text, margin: '26px 0 4px' }}>Evidence</h2>
         <p style={{ fontSize: 12, color: TEC_COLORS.subtext, margin: '0 0 14px', lineHeight: 1.5 }}>
-          Append-only — every record carries a human reviewer and a timestamp (C-120 §7).
+          Append-only — every record carries a human reviewer and a timestamp.
         </p>
 
         <div style={{ display: 'grid', gap: 10 }}>
@@ -104,9 +104,7 @@ export default async function VerifyPage(
         </div>
 
         <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '22px 0 0', lineHeight: 1.5 }}>
-          “Verified” = evidence confirmed. “Trusted” is the interpretation of that evidence
-          by Analytics and TEC AI — a different function (C-120 §4). This page is the
-          evidence, not a score.
+          “Verified” = evidence confirmed. “Trusted” is how others interpret that evidence. This page shows the evidence itself.
         </p>
       </div>
     </main>

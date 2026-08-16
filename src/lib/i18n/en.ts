@@ -22,4 +22,19 @@ export const en = {
     appsTitle: 'TEC Ecosystem',
     appsCount: '24 Apps',
   },
+  zone: {
+    brand:       'TEC Zone · Verification',
+    welcome:     'Welcome',
+    welcomeName: 'Welcome, {name}',
+    subtitle:    'The trust layer of the Pi ecosystem. Zone answers one question — “What can be trusted?” — by recording evidence, not by claiming authority.',
+    nav: { home: 'Home', registry: 'Registry', verify: 'Verify', settings: 'Settings' },
+    footer:      'Zone records verified evidence — the facts behind what can be trusted. Verification is earned from evidence, never bought.',
+    settings: {
+      profile: 'Profile', planFree: 'Free', planPro: 'Pro',
+      connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',
+      appearance: 'Appearance', language: 'Language', languageDesc: 'Display language',
+      about: 'About', version: 'Version', domain: 'Domain', ecosystem: 'Ecosystem',
+      builtOn: 'Built on', builtOnPi: 'Pi Network', logout: 'Logout',
+    },
+  },
 };

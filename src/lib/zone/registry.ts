@@ -45,7 +45,7 @@ const V1_DATE  = '2026-07-05';
 // reachable Mainnet deployment, no reported fraud). This is dogfooding: the
 // first verified entities are the TEC apps themselves.
 const tecAppEvidence = (name: string): EvidenceRecord[] => [
-  { criterion: 'Pi identity verified (Hub)', detail: `${name} authenticates via Hub SSO (C-123) — one Pi principal per session.`, reviewer: REVIEWER, recordedAt: V1_DATE },
+  { criterion: 'Pi identity verified (Hub)', detail: `${name} authenticates via Hub SSO — one Pi principal per session.`, reviewer: REVIEWER, recordedAt: V1_DATE },
   { criterion: 'Active Pi wallet',           detail: 'Registered on the Pi Developer Portal (Mainnet) with a linked app wallet.', reviewer: REVIEWER, recordedAt: V1_DATE },
   { criterion: 'Accessible and functional',  detail: `${name} is deployed and reachable on its tecosystem.app domain.`, reviewer: REVIEWER, recordedAt: V1_DATE },
   { criterion: 'No reported fraud',          detail: 'No open fraud reports or disputes at time of review.', reviewer: REVIEWER, recordedAt: V1_DATE },

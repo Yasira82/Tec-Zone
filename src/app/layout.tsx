@@ -1,11 +1,12 @@
 import { RefCapture } from '@/components/referral/RefCapture';
 import { RefApply } from '@/components/referral/RefApply';
+import { LocaleProvider } from '@/lib/i18n';
 import type { Metadata } from 'next';
 import '@/styles/tec-design-tokens.css';
 
 export const metadata: Metadata = {
-  title:       'TEC Zone — Verification Runtime',
-  description: 'TEC Zone — the Verification Runtime of the Pi ecosystem. What can be trusted?',
+  title:       'TEC Zone — Verification',
+  description: 'TEC Zone — verified trust for the Pi ecosystem. What can be trusted?',
 };
 
 export default function RootLayout({
@@ -61,9 +62,11 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <RefCapture />
-        <RefApply />
-        {children}
+        <LocaleProvider>
+          <RefCapture />
+          <RefApply />
+          {children}
+        </LocaleProvider>
       </body>
     </html>
   );
