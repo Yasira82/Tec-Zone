@@ -22,4 +22,19 @@ export const ar = {
     appsTitle: 'منظومة TEC',
     appsCount: '24 تطبيق',
   },
+  zone: {
+    brand:       'TEC Zone · التحقّق',
+    welcome:     'أهلاً',
+    welcomeName: 'أهلاً، {name}',
+    subtitle:    'طبقة الثقة في منظومة Pi. Zone بيجاوب على سؤال واحد — «إيه اللي نقدر نثق فيه؟» — عن طريق تسجيل الأدلة، مش ادّعاء السلطة.',
+    nav: { home: 'الرئيسية', registry: 'السجل', verify: 'التحقّق', settings: 'الإعدادات' },
+    footer:      'Zone بيسجّل أدلة مُوثّقة — الحقائق اللي وراء اللي نقدر نثق فيه. التوثيق بيتكسب بالأدلة، مايتشراش.',
+    settings: {
+      profile: 'الملف الشخصي', planFree: 'مجاني', planPro: 'Pro',
+      connectedPi: 'متصل بـ Pi', notSignedIn: 'غير مسجّل الدخول', member: 'عضو TEC',
+      appearance: 'المظهر', language: 'اللغة', languageDesc: 'لغة العرض',
+      about: 'حول', version: 'الإصدار', domain: 'النطاق', ecosystem: 'المنظومة',
+      builtOn: 'مبني على', builtOnPi: 'شبكة Pi', logout: 'تسجيل الخروج',
+    },
+  },
 };
