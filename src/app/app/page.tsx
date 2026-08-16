@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { InviteCard } from '@/components/referral/InviteCard';
 import Link from 'next/link';
 import { usePiAuth } from '@yasser172/tec-auth';
+import { useMe } from '@/lib-client/hooks/useMe';
 import { TEC_COLORS } from '@yasser172/tec-ui';
 import { ZonePro } from './components/ZonePro';
 import { TrustCheck } from './components/TrustCheck';
@@ -24,7 +25,9 @@ interface RegistryEntity {
 
 export default function ZoneHome() {
   const { user, isLoading, isAuthenticated } = usePiAuth();
-  const name = user?.piUsername ? `@${user.piUsername}` : '';
+  const me = useMe(); // server-resolved Pi username (Pi Browser hides tec_user from client JS — C-123 §3)
+  const piName = me.username ?? user?.piUsername ?? null;
+  const name = piName ? `@${piName}` : '';
 
   // Real data end-to-end (C-135 §4): "Zone Verified" is a factual claim — the
   // registry shows only live verified entities, or an honest "unavailable" state.
