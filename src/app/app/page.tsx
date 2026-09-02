@@ -31,6 +31,21 @@ export default function ZoneHome() {
   const { t } = useTranslation();
   const [tab, setTab] = useState<ZoneTab>('home');
 
+  /**
+   * Signed in, as the SERVER sees it.
+   *
+   * `usePiAuth().isAuthenticated` reads `document.cookie`. Pi Browser stores
+   * `tec_user` so the server can read it and client JS cannot (C-123 §3) — so on
+   * the only platform this app ships to, that value is always false. Every panel
+   * gated on it rendered nothing: the whole verification workflow was invisible
+   * to the merchants it exists for.
+   *
+   * The page already knew this — `useMe()` is a server round-trip and the line
+   * above says why. These two call sites were simply missed. The client flag is
+   * kept as a fallback for a normal browser, never as the whole answer.
+   */
+  const signedIn = me.authenticated || isAuthenticated;
+
   const piName = me.username ?? user?.piUsername ?? null;
   const name = piName ? `@${piName}` : '';
 
@@ -98,9 +113,9 @@ export default function ZoneHome() {
         {tab === 'verify' && (
           <>
             {/* Verification workflow (C-120 §7) — apply + attach evidence (signed-in only). */}
-            <VerificationPanel isAuth={isAuthenticated} />
+            <VerificationPanel isAuth={signedIn} authLoading={me.loading} />
             {/* Reviewer console (C-120 §7) — admin-only; hidden unless the queue loads. */}
-            <ReviewPanel isAuth={isAuthenticated} />
+            <ReviewPanel isAuth={signedIn} />
           </>
         )}
 
