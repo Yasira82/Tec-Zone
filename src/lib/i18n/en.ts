@@ -26,7 +26,7 @@ export const en = {
     brand:       'TEC Zone · Verification',
     welcome:     'Welcome',
     welcomeName: 'Welcome, {name}',
-    subtitle:    'The trust layer of the Pi ecosystem. Zone answers one question — “What can be trusted?” — by recording evidence, not by claiming authority.',
+    subtitle:    'the trust layer of the Pi ecosystem',
     nav: { home: 'Home', registry: 'Registry', verify: 'Verify', settings: 'Settings' },
     footer:      'Zone records verified evidence — the facts behind what can be trusted. Verification is earned from evidence, never bought.',
     settings: {

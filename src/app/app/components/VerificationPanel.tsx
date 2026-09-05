@@ -9,6 +9,7 @@
 import { useEffect, useState } from 'react';
 import { TEC_COLORS } from '@yasser172/tec-ui';
 import { buildHeaders } from '@/lib/request-id';
+import { reportError } from '@/lib/observability/reportError';
 
 interface Submission {
   handle: string; type: string; name: string; summary?: string | null;
@@ -29,7 +30,15 @@ const STATUS_TONE: Record<string, string> = {
   REVOKED:  '#EF4444',
 };
 
-export function VerificationPanel({ isAuth }: { isAuth: boolean }) {
+export function VerificationPanel({ isAuth, authLoading = false }: {
+  isAuth: boolean;
+  /**
+   * Whether the session is still being resolved server-side. Without it the
+   * signed-out pitch flashes for everyone on every open, because the answer to
+   * "am I signed in?" arrives over the network (C-123 §3).
+   */
+  authLoading?: boolean;
+}) {
   const [subs, setSubs]   = useState<Submission[] | null>(null);
   const [type, setType]   = useState('PROJECT');
   const [name, setName]   = useState('');
@@ -44,12 +53,41 @@ export function VerificationPanel({ isAuth }: { isAuth: boolean }) {
       if (!res.ok) { setSubs([]); return; }
       const data = await res.json().catch(() => ({}));
       setSubs((data.submissions as Submission[]) ?? []);
-    } catch { setSubs([]); }
+    } catch (err) {
+      // An applicant with no submissions and one whose list failed to load see
+      // the same screen — but they must not look the same to us.
+      reportError(err, { where: 'VerificationPanel.load' });
+      setSubs([]);
+    }
   }
 
   useEffect(() => { if (isAuth) load(); }, [isAuth]);
 
-  if (!isAuth) return null;
+  // `return null` was the whole workflow's failure mode. Gated on a client-read
+  // cookie that Pi Browser hides, it rendered NOTHING — so the surface a
+  // merchant needs to request verification was invisible on the only platform
+  // this app ships to, and looked identical to a broken page.
+  if (authLoading) {
+    return (
+      <section style={{ marginTop: 28 }}>
+        <p style={{ fontSize: 13, color: TEC_COLORS.subtext }}>Loading…</p>
+      </section>
+    );
+  }
+
+  if (!isAuth) {
+    return (
+      <section style={{ marginTop: 28 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: '0 0 4px' }}>
+          Apply for verification
+        </h2>
+        <p style={{ fontSize: 12.5, color: TEC_COLORS.subtext, margin: 0, lineHeight: 1.55 }}>
+          Sign in with Pi to submit your project, business or community for review.
+          A human reviewer decides — verification is earned, never bought.
+        </p>
+      </section>
+    );
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();

@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react';
 import { TEC_COLORS } from '@yasser172/tec-ui';
 import { buildHeaders } from '@/lib/request-id';
+import { reportError } from '@/lib/observability/reportError';
 
 interface Evidence { kind: string; note: string; source: string; created_at?: string }
 interface QueueItem {
@@ -28,7 +29,14 @@ export function ReviewPanel(_props: { isAuth: boolean }) {
       const data = await res.json().catch(() => ({}));
       setQueue((data.queue as QueueItem[]) ?? []);
       setAdmin(true);
-    } catch { setAdmin(false); }
+    } catch (err) {
+      // A 403 is expected and handled above. Reaching HERE means the request
+      // never completed — and the console silently disappearing for a real
+      // reviewer looks exactly like not being an admin. Hidden on screen,
+      // reported to us.
+      reportError(err, { where: 'ReviewPanel.load' });
+      setAdmin(false);
+    }
   }
 
   // Always attempt the load — do NOT gate on the client-side `isAuth` flag, which is
