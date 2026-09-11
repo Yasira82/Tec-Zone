@@ -17,6 +17,7 @@ const ALLOWED_AUDIENCES = [
   'https://zone.tecosystem.app',
   'https://tec-zone.vercel.app',
   'https://tec-zone-mu.vercel.app',
+  'https://zone-test.tecosystem.app',
 ];
 const DEFAULT_REDIRECT = '/app';
 
