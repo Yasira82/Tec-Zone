@@ -54,23 +54,49 @@ const HUB = (() => {
   try { return new URL(raw).origin; } catch { return 'https://hub.tecosystem.app'; }
 })();
 
-const COPY = {
-  en: { back: 'Back to the Quest', hint: 'Founding 100' },
-  ar: { back: 'ارجع للمهمة',        hint: 'المئة المؤسِّسة' },
+/**
+ * Where `q` sends you back to — a CLOSED SET, keyed by a fixed value.
+ *
+ * Two Hub surfaces send pioneers into apps and both leave them stranded the
+ * same way: the Founding 100 Quest (`/pioneers`) and the reward campaign
+ * (`/hub/campaign`). A pioneer sent by the campaign and handed a link back to
+ * the Quest has been returned to the wrong errand.
+ *
+ * The destination is LOOKED UP, never taken from the URL. `?q=/hub/campaign`
+ * would have been shorter and would have made this component render a path a
+ * stranger chose — on a page that exists to tell somebody where to go next.
+ * The value is an index into this table or it is nothing.
+ */
+const RETURN_TO: Record<string, { path: string; en: [string, string]; ar: [string, string] }> = {
+  '1': {
+    path: '/pioneers',
+    en: ['Back to the Quest',   'Founding 100'],
+    ar: ['ارجع للمهمة',          'المئة المؤسِّسة'],
+  },
+  '2': {
+    path: '/hub/campaign',
+    en: ['Back to the campaign', 'Pioneer reward'],
+    ar: ['ارجع للحملة',           'مكافأة الرواد'],
+  },
 };
 
 export function QuestReturn() {
   const { locale } = useTranslation();
-  const [show, setShow] = useState(false);
+  /** The key into RETURN_TO, or null. Never a path read off the URL. */
+  const [from, setFrom] = useState<string | null>(null);
 
   useEffect(() => {
-    let marked = false;
+    let marked: string | null = null;
 
-    // Arrived from the Quest — remember it before the URL is cleaned.
+    // Arrived from a Hub surface — remember WHICH one before the URL is cleaned.
     try {
-      if (new URLSearchParams(window.location.search).get('q') === '1') {
-        sessionStorage.setItem(FLAG, String(Date.now()));
-        marked = true;
+      const q = new URLSearchParams(window.location.search).get('q');
+      if (q && Object.prototype.hasOwnProperty.call(RETURN_TO, q)) {
+        // `key|timestamp`. One entry, because two would eventually disagree —
+        // a remembered destination and a separate remembered time can be
+        // written apart and read together.
+        sessionStorage.setItem(FLAG, `${q}|${Date.now()}`);
+        marked = q;
       }
     } catch { /* private window, or storage blocked — fall through to the read */ }
 
@@ -86,22 +112,29 @@ export function QuestReturn() {
     }
 
     try {
-      const at = Number(sessionStorage.getItem(FLAG) ?? '');
-      setShow(Number.isFinite(at) && at > 0 && Date.now() - at < WINDOW_MS);
+      const parts = (sessionStorage.getItem(FLAG) ?? '').split('|');
+      const key = parts[0] ?? '';
+      const at  = Number(parts[1] ?? '');
+      const fresh = Number.isFinite(at) && at > 0 && Date.now() - at < WINDOW_MS;
+      // Checked against the table on the way OUT as well as the way in. A value
+      // written by an older build, or by hand, resolves to nothing rather than
+      // to a broken link.
+      setFrom(fresh && Object.prototype.hasOwnProperty.call(RETURN_TO, key) ? key : null);
     } catch {
       // Storage unreadable. Show it only if THIS load carried the marker —
       // a pioneer who just arrived still gets their way back.
-      setShow(marked);
+      setFrom(marked);
     }
   }, []);
 
-  if (!show) return null;
+  const dest = from ? RETURN_TO[from] : undefined;
+  if (!dest) return null;
 
-  const t = COPY[locale === 'ar' ? 'ar' : 'en'];
+  const [back, hint] = locale === 'ar' ? dest.ar : dest.en;
 
   return (
     <a
-      href={`${HUB}/pioneers`}
+      href={`${HUB}${dest.path}`}
       style={{
         display: 'flex', alignItems: 'center', gap: 8,
         padding: '10px 16px', textDecoration: 'none',
@@ -114,9 +147,9 @@ export function QuestReturn() {
       <span style={{ color: '#FBB44A', fontSize: 16, lineHeight: 1 }}>
         {locale === 'ar' ? '→' : '←'}
       </span>
-      <span style={{ color: '#FBB44A', fontSize: 13, fontWeight: 800 }}>{t.back}</span>
+      <span style={{ color: '#FBB44A', fontSize: 13, fontWeight: 800 }}>{back}</span>
       <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, marginInlineStart: 'auto' }}>
-        {t.hint}
+        {hint}
       </span>
     </a>
   );
