@@ -30,12 +30,39 @@ const barCode    = strip(bar);
 const middleware = strip(read('middleware.ts'));
 const layout     = strip(read('src/app/layout.tsx'));
 
-describe('it only appears for a pioneer who came from the Quest', () => {
+describe('it only appears for a pioneer sent by a Hub surface', () => {
   it('is gated on the marker, never rendered by default', () => {
     // Zone is a real app with real users. A permanent campaign bar is wrong for
     // all of them.
-    expect(barCode).toMatch(/if \(!show\) return null;/);
-    expect(barCode).toMatch(/\.get\('q'\) === '1'/);
+    expect(barCode).toMatch(/if \(!dest\) return null;/);
+  });
+
+  it('LOOKS the destination up — it never reads a path off the URL', () => {
+    // ── A rewrite of this file's own earlier assertion ─────────────────────
+    // It pinned `.get('q') === '1'`, which was right while there was exactly
+    // one place to go back to. There are two: the Founding Quest (/pioneers)
+    // and the reward campaign (/hub/campaign), and a pioneer sent by the
+    // campaign who is handed a link back to the Quest has been returned to the
+    // wrong errand.
+    //
+    // The fix is a table, not a wider match. `?q=/hub/campaign` would have been
+    // shorter and would have let whoever built the link choose what this app
+    // renders as its way home — on the one element a stranded visitor is meant
+    // to trust. The value is an index or it is nothing.
+    expect(barCode).toMatch(/const RETURN_TO: Record<string/);
+    expect(barCode).toMatch(/hasOwnProperty\.call\(RETURN_TO, q\)/);
+    expect(barCode).toMatch(/href=\{`\$\{HUB\}\$\{dest\.path\}`\}/);
+  });
+
+  it('knows both surfaces, and only those', () => {
+    expect(bar).toMatch(/'1':\s*\{\s*\n?\s*path: '\/pioneers'/);
+    expect(bar).toMatch(/'2':\s*\{\s*\n?\s*path: '\/hub\/campaign'/);
+  });
+
+  it('re-checks the stored key on the way OUT, not just on the way in', () => {
+    // A value written by an older build, or by hand, must resolve to nothing
+    // rather than to a broken link.
+    expect(barCode).toMatch(/hasOwnProperty\.call\(RETURN_TO, key\)/);
   });
 
   it('matches the marker instead of echoing it', () => {
@@ -49,7 +76,15 @@ describe('the marker survives the sign-in hop — the visit that needs it most',
     // `/app?q=1` with no session is redirected to the landing page, and the
     // query died there. So the ONE visitor who had to sign in — the one most
     // likely to be lost afterwards — was the only one who never got a way back.
-    expect(middleware).toMatch(/searchParams\.get\('q'\) === '1'\) loginUrl\.searchParams\.set\('q', '1'\)/);
+    expect(middleware).toMatch(/const q = req\.nextUrl\.searchParams\.get\('q'\)/);
+    expect(middleware).toMatch(/q === '1' \|\| q === '2'/);
+  });
+
+  it('the middleware matches against the same closed set, not a pattern', () => {
+    // It re-emits `q` into a URL the landing page then acts on. A `if (q)` here
+    // would forward whatever arrived — the one place in this flow where a
+    // stranger's value could travel further than the component that rejects it.
+    expect(middleware).not.toMatch(/if \(q\) loginUrl/);
   });
 
   it('the bar is in the root layout, so it also captures on the landing page', () => {
@@ -73,8 +108,8 @@ describe('the marker survives the sign-in hop — the visit that needs it most',
 });
 
 describe('it is a forward navigation to a real Hub URL', () => {
-  it('links to the Quest, not to history', () => {
-    expect(barCode).toMatch(/href=\{`\$\{HUB\}\/pioneers`\}/);
+  it('links to a Hub surface, not to history', () => {
+    expect(barCode).toMatch(/href=\{`\$\{HUB\}\$\{dest\.path\}`\}/);
     expect(barCode).not.toMatch(/history\.back|router\.back/);
   });
 
@@ -90,6 +125,9 @@ describe('storage is never allowed to decide the page', () => {
   it('still shows the bar when sessionStorage throws', () => {
     // Private window, or storage blocked. A pioneer who just arrived from the
     // Quest keeps their way back; only the memory of it is lost.
-    expect(barCode).toMatch(/setShow\(marked\)/);
+    // `marked` is now the KEY that arrived on this load, not a boolean — so the
+    // fallback still resolves through the same table and cannot show a bar
+    // pointing nowhere.
+    expect(barCode).toMatch(/setFrom\(marked\)/);
   });
 });
