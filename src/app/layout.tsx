@@ -6,6 +6,7 @@ import { HUB_HOSTS } from '@/lib/pi-network';
 import type { Metadata } from 'next';
 import '@/styles/tec-design-tokens.css';
 import { ArrivalReport } from '@/components/pioneer/ArrivalReport';
+import { QuestReturn } from '@/components/pioneer/QuestReturn';
 
 export const metadata: Metadata = {
   title:       'TEC Zone — Verification',
@@ -118,6 +119,11 @@ export default function RootLayout({
         <PiWarmup />
         <ArrivalReport />
         <LocaleProvider>
+          {/* Inside LocaleProvider (it reads the locale) and FIRST in the flow,
+              so the way back sits above the page rather than over it — a fixed
+              bar would cover whatever each app renders at the top. Renders
+              nothing unless this visit came from the Quest. */}
+          <QuestReturn />
           <RefCapture />
           <RefApply />
           {children}
