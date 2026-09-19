@@ -67,6 +67,16 @@ export function middleware(req: NextRequest) {
     if (!token || token.trim() === '') {
       const loginUrl = new URL('/', req.url);
       loginUrl.searchParams.set('redirect', pathname);
+      // Carry the Founding-100 Quest marker across the sign-in hop.
+      //
+      // A first visit arrives as `/app?q=1`, has no session, and is sent here —
+      // and the query died on that redirect, so the one visitor who needs a way
+      // back to the Quest (the one who just had to sign in) was the only one who
+      // never got it. `QuestReturn` reads it on the landing page below.
+      //
+      // Only `q`, and only the literal `1`: this value ends up in a link the
+      // page renders, so it is matched, never copied.
+      if (req.nextUrl.searchParams.get('q') === '1') loginUrl.searchParams.set('q', '1');
       return NextResponse.redirect(loginUrl);
     }
   }
