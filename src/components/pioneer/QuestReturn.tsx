@@ -39,9 +39,30 @@
 // This file is copied verbatim into twenty-three apps. A version that also
 // needed two dictionary edits per app is a version that gets pasted wrong
 // somewhere, and the campaign bar is not app vocabulary.
+//
+// ── Colour comes from TEC_COLORS — not literals, and not var() ─────────────
+//
+// Three ways to paint this, and only one survives the whole fleet:
+//
+//   hex literals   Life's theme guard forbids them in a component, and it is
+//                  right: a literal cannot follow a theme.
+//   var(--tec-*)   Works in 21 apps. Paints NOTHING in Assets, Commerce and
+//                  Ecommerce, whose layouts do not import the token file — and
+//                  paints nothing SILENTLY, which is the exact failure that
+//                  guard exists to catch.
+//   TEC_COLORS     A package every app already depends on, whose values are
+//                  plain hex at runtime. Correct with or without the token CSS,
+//                  and it follows each app's OWN palette: the three excluded
+//                  repos are on tec-ui 2.x, so the bar there matches the app
+//                  around it instead of importing the Pi amber into a screen
+//                  that has not adopted it.
+//
+// The `${...}33` alpha suffix is the fleet idiom, and is why these tokens must
+// stay plain hex — `var(--tec-gold)33` is invalid CSS that fails without an
+// error.
 
 import { useEffect, useState } from 'react';
-import { useTranslation } from '@/lib/i18n';
+import { TEC_COLORS } from '@yasser172/tec-ui';
 
 const FLAG   = 'tec_quest_return';
 const WINDOW_MS = 6 * 60 * 60 * 1000;
@@ -80,12 +101,38 @@ const RETURN_TO: Record<string, { path: string; en: [string, string]; ar: [strin
   },
 };
 
+/**
+ * The reader's language, read the way the provider WRITES it.
+ *
+ * Deliberately not `useTranslation()`. This file is copied verbatim into
+ * twenty-two more apps, and a hook import is a dependency each of them has to
+ * satisfy identically — `tec-template-base` has no `LocaleProvider` at all, so
+ * the hook there does not degrade, it THROWS ("must be used within
+ * LocaleProvider") and takes the whole layout with it. A component whose job is
+ * to rescue a stranded visitor must not be the thing that breaks the page.
+ *
+ * `tec_locale` is the same key `setLocale` persists, and `<html lang>` is set
+ * by the same provider — so this agrees with the app when there is one, and
+ * still answers when there is not. Server render has neither; 'en' until the
+ * effect runs, which is also when the bar first appears.
+ */
+function readLocale(): 'en' | 'ar' {
+  try {
+    if (localStorage.getItem('tec_locale') === 'ar') return 'ar';
+  } catch { /* ignore */ } // storage blocked — the document answers next
+  try {
+    if (document.documentElement.lang === 'ar') return 'ar';
+  } catch { /* ignore */ } // no document — server render; 'en' until the effect
+  return 'en';
+}
+
 export function QuestReturn() {
-  const { locale } = useTranslation();
+  const [locale, setLocale] = useState<'en' | 'ar'>('en');
   /** The key into RETURN_TO, or null. Never a path read off the URL. */
   const [from, setFrom] = useState<string | null>(null);
 
   useEffect(() => {
+    setLocale(readLocale());
     let marked: string | null = null;
 
     // Arrived from a Hub surface — remember WHICH one before the URL is cleaned.
@@ -98,7 +145,7 @@ export function QuestReturn() {
         sessionStorage.setItem(FLAG, `${q}|${Date.now()}`);
         marked = q;
       }
-    } catch { /* private window, or storage blocked — fall through to the read */ }
+    } catch { /* ignore */ } // private window, or storage blocked — the read decides
 
     // Take the marker out of the address bar. It is campaign plumbing; leaving
     // it there means it gets shared, bookmarked, and eventually reported as a
@@ -108,7 +155,7 @@ export function QuestReturn() {
         const u = new URL(window.location.href);
         u.searchParams.delete('q');
         window.history.replaceState(null, '', u.pathname + u.search + u.hash);
-      } catch { /* replaceState is cosmetic — never let it decide the bar */ }
+      } catch { /* ignore */ } // replaceState is cosmetic — it never decides the bar
     }
 
     try {
@@ -138,17 +185,17 @@ export function QuestReturn() {
       style={{
         display: 'flex', alignItems: 'center', gap: 8,
         padding: '10px 16px', textDecoration: 'none',
-        background: '#0B1020', borderBottom: '1px solid #FBB44A33',
+        background: TEC_COLORS.surface, borderBottom: `1px solid ${TEC_COLORS.gold}33`,
         fontFamily: 'system-ui, -apple-system, sans-serif',
       }}
     >
       {/* The arrow points back in reading order, so it still means "back" in
           Arabic instead of pointing at the next app. */}
-      <span style={{ color: '#FBB44A', fontSize: 16, lineHeight: 1 }}>
+      <span style={{ color: TEC_COLORS.gold, fontSize: 16, lineHeight: 1 }}>
         {locale === 'ar' ? '→' : '←'}
       </span>
-      <span style={{ color: '#FBB44A', fontSize: 13, fontWeight: 800 }}>{back}</span>
-      <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, marginInlineStart: 'auto' }}>
+      <span style={{ color: TEC_COLORS.gold, fontSize: 13, fontWeight: 800 }}>{back}</span>
+      <span style={{ color: TEC_COLORS.subtext, fontSize: 11, marginInlineStart: 'auto' }}>
         {hint}
       </span>
     </a>

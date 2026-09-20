@@ -131,3 +131,43 @@ describe('storage is never allowed to decide the page', () => {
     expect(barCode).toMatch(/setFrom\(marked\)/);
   });
 });
+
+describe('it is a file that can be copied, not a file that must be wired', () => {
+  it('imports nothing from the APP — only a package every app already has', () => {
+    // It goes into twenty-three apps. Every `@/` import is a dependency each of
+    // them has to satisfy identically — and `tec-template-base` has no
+    // `LocaleProvider`, so `useTranslation()` there does not degrade, it THROWS
+    // and takes the whole layout with it. A component whose job is to rescue a
+    // stranded visitor must not be the thing that breaks the page.
+    //
+    // `@yasser172/tec-ui` is a different kind of dependency: a published package
+    // in all 24 package.json files, not a path that may or may not resolve.
+    expect(barCode).not.toMatch(/from '@\//);
+    expect(barCode).not.toMatch(/useTranslation/);
+    expect(barCode).toMatch(/from '@yasser172\/tec-ui'/);
+  });
+
+  it('reads the language the way the provider writes it', () => {
+    // Agrees with the app when there is a provider, and still answers when
+    // there is not.
+    expect(barCode).toMatch(/localStorage\.getItem\('tec_locale'\)/);
+    expect(barCode).toMatch(/document\.documentElement\.lang/);
+  });
+
+  it('paints from TEC_COLORS — not literals, and not var()', () => {
+    // ── A correction to this file's own earlier assertion ──────────────────
+    // It pinned the hex `#FBB44A`, reasoning that the component "cannot assume
+    // a token file". The premise was right — 3 of 24 layouts do not import the
+    // tokens, so `var(--tec-gold)` paints nothing there, silently — but the
+    // conclusion was wrong. A literal is forbidden outright by Life's theme
+    // guard, which caught it the first time this file was copied.
+    //
+    // TEC_COLORS answers both: a package every app depends on, plain hex at
+    // runtime so it needs no token file, and each app's OWN palette — the three
+    // excluded repos are on tec-ui 2.x and the bar there matches the app around
+    // it rather than importing a colour that app has not adopted.
+    expect(barCode).not.toMatch(/#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/);
+    expect(barCode).not.toMatch(/var\(--tec-/);
+    expect(barCode).toMatch(/TEC_COLORS\.gold/);
+  });
+});
