@@ -74,9 +74,12 @@ export function middleware(req: NextRequest) {
       // back to the Quest (the one who just had to sign in) was the only one who
       // never got it. `QuestReturn` reads it on the landing page below.
       //
-      // Only `q`, and only the literal `1`: this value ends up in a link the
-      // page renders, so it is matched, never copied.
-      if (req.nextUrl.searchParams.get('q') === '1') loginUrl.searchParams.set('q', '1');
+      // Only `q`, and only a value from the closed set `QuestReturn` knows:
+      // `1` = the Founding 100 Quest, `2` = the reward campaign. This decides
+      // a link the page renders, so it is matched against a fixed list and
+      // re-emitted as a literal — never copied through.
+      const q = req.nextUrl.searchParams.get('q');
+      if (q === '1' || q === '2') loginUrl.searchParams.set('q', q);
       return NextResponse.redirect(loginUrl);
     }
   }
