@@ -27,7 +27,7 @@ const strip = (s: string) =>
 
 const bar        = read('src/components/pioneer/QuestReturn.tsx');
 const barCode    = strip(bar);
-const middleware = strip(read('middleware.ts'));
+const middleware = strip(read('src/middleware.ts'));
 const layout     = strip(read('src/app/layout.tsx'));
 
 describe('it only appears for a pioneer sent by a Hub surface', () => {
@@ -72,19 +72,12 @@ describe('it only appears for a pioneer sent by a Hub surface', () => {
 });
 
 describe('the marker survives the sign-in hop — the visit that needs it most', () => {
-  it('the middleware carries q across the login redirect', () => {
-    // `/app?q=1` with no session is redirected to the landing page, and the
-    // query died there. So the ONE visitor who had to sign in — the one most
-    // likely to be lost afterwards — was the only one who never got a way back.
-    expect(middleware).toMatch(/const q = req\.nextUrl\.searchParams\.get\('q'\)/);
-    expect(middleware).toMatch(/q === '1' \|\| q === '2'/);
-  });
-
-  it('the middleware matches against the same closed set, not a pattern', () => {
-    // It re-emits `q` into a URL the landing page then acts on. A `if (q)` here
-    // would forward whatever arrived — the one place in this flow where a
-    // stranger's value could travel further than the component that rejects it.
-    expect(middleware).not.toMatch(/if \(q\) loginUrl/);
+  it('there is no login redirect for q to be lost on (C-123 §11)', () => {
+    // The middleware used to bounce a session-less `/app?q=1` to the landing
+    // page and had to carry `q` across that hop. It no longer redirects a page
+    // load at all — the page opens where the Quest link sent it, `q` included,
+    // and the Quest's links now arrive signed in (C-123 §12).
+    expect(middleware).not.toMatch(/NextResponse\.redirect/);
   });
 
   it('the bar is in the root layout, so it also captures on the landing page', () => {
