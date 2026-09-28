@@ -29,6 +29,15 @@ export const en = {
     subtitle:    'the trust layer of the Pi ecosystem',
     nav: { home: 'Home', registry: 'Registry', verify: 'Verify', settings: 'Settings' },
     footer:      'Zone records verified evidence — the facts behind what can be trusted. Verification is earned from evidence, never bought.',
+    // C5 — one honest reason for every empty group. All four types can be submitted
+    // today (Verify tab → Zone review); the old line blamed "Commerce activity (V2)"
+    // for Communities and Builders too.
+    registryEmpty: {
+      project:   'No verified projects yet. Submit one from the Verify tab — a Zone reviewer checks the evidence.',
+      merchant:  'No verified merchants yet. Submit one from the Verify tab — a Zone reviewer checks the evidence.',
+      builder:   'No verified builders yet. Submit one from the Verify tab — a Zone reviewer checks the evidence.',
+      community: 'No verified communities yet. Submit one from the Verify tab — a Zone reviewer checks the evidence.',
+    },
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',

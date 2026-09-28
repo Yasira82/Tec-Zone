@@ -155,7 +155,7 @@ export default function ZoneHome() {
 
                   {group.length === 0 ? (
                     <div style={{ fontSize: 12, color: TEC_COLORS.subtext, fontStyle: 'italic', padding: '4px 0' }}>
-                      No verified {groupTitle.toLowerCase()} yet — verification opens with Commerce activity (V2).
+                      {t.zone.registryEmpty[type]}
                     </div>
                   ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
