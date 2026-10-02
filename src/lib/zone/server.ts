@@ -4,6 +4,8 @@
 // owner from the token (never the body — P6); reviewer authorization (ADMIN) is
 // enforced by the backend. Reads of verified status stay public (registry / verify).
 // NEW-A: the gateway URL is server-only (API_GATEWAY_URL) — never shipped to the client.
+import { APP_SOURCE } from '@/lib/app-source';
+
 const GW = process.env.API_GATEWAY_URL ?? '';
 
 const gwHeaders = (token?: string): Record<string, string> => ({
@@ -141,7 +143,7 @@ export const submitVerification = (
 export async function resolveProStatus(token: string): Promise<boolean> {
   if (!GW) return false;
   try {
-    const res = await fetch(`${GW}/api/commerce/subscriptions/status`, {
+    const res = await fetch(`${GW}/api/commerce/subscriptions/status?app=${encodeURIComponent(APP_SOURCE)}`, {
       headers: gwHeaders(token), cache: 'no-store',
     });
     if (!res.ok) return false;
