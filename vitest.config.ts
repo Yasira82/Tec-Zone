@@ -2,6 +2,9 @@ import { defineConfig } from 'vitest/config';
 import path             from 'path';
 
 export default defineConfig({
+  // The JSX runtime Next builds with — so a test can render a component that
+  // does not import React (the /pi-test panel was the first to need it).
+  esbuild: { jsx: 'automatic' },
   test: {
     environment: 'happy-dom',
     include:     ['src/**/*.{test,spec}.{ts,tsx}'],
