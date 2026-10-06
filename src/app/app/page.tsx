@@ -1,5 +1,7 @@
 'use client';
 
+import { SignInGate } from '@/components/pi/SignInGate';
+
 // TEC Zone — the Verification Runtime of the Pi ecosystem (C-120). Zone answers
 // one question: "What can be trusted?" It records evidence and serves verified
 // status — it never renders judgement (trust interpretation is Analytics + TEC
@@ -25,7 +27,7 @@ interface RegistryEntity {
   status: string; verifiedAt: string | null; evidenceCount: number; domain?: string;
 }
 
-export default function ZoneHome() {
+function ZoneHome() {
   const { user, isLoading, isAuthenticated } = usePiAuth();
   const me = useMe(); // server-resolved Pi username (Pi Browser hides tec_user from client JS — C-123 §3)
   const { t } = useTranslation();
@@ -188,4 +190,11 @@ export default function ZoneHome() {
       <BottomNav active={tab} onSelect={setTab} />
     </main>
   );
+}
+
+// The door: a sign-in button before any screen when there is no session
+// (SignInGate — C-123 §10; owner, 2026-10-06). A visit from the Hub arrives
+// signed in (§12) and goes straight through.
+export default function ZoneHomeGated() {
+  return <SignInGate><ZoneHome /></SignInGate>;
 }
