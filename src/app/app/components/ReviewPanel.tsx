@@ -105,7 +105,7 @@ function ReviewRow({ item, onDone }: { item: QueueItem; onDone: () => void }) {
     <div style={{ background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}22`, borderRadius: 12, padding: 14 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
         <span style={{ fontSize: 13.5, fontWeight: 800, color: TEC_COLORS.text }}>
-          {item.name} <span style={{ fontSize: 11, fontWeight: 400, color: TEC_COLORS.subtext }}>@{item.handle} · {item.type?.toLowerCase()}</span>
+          {item.name} <span style={{ fontSize: 11, fontWeight: 400, color: TEC_COLORS.subtext }}>@{item.handle} · {c.type[(item.type ?? '').toLowerCase() as keyof typeof c.type] ?? item.type}</span>
         </span>
         {item.owner && <span style={{ fontSize: 10.5, color: TEC_COLORS.subtext }}>{c.review.by(item.owner)}</span>}
         {item.priority && (
