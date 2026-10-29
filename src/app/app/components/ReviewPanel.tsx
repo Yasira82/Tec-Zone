@@ -10,6 +10,8 @@ import { TEC_COLORS } from '@yasser172/tec-ui';
 import { buildHeaders } from '@/lib/request-id';
 import { reportError } from '@/lib/observability/reportError';
 import { useZoneCopy } from '@/lib/zone/copy';
+import { useTranslation } from '@/lib/i18n';
+import { localSummary, localNote, kindLabel, sourceLabel } from '@/lib/zone/seed-text';
 import { Icon } from './Icon';
 
 interface Evidence { kind: string; note: string; source: string; created_at?: string }
@@ -78,6 +80,7 @@ export function ReviewPanel(_props: { isAuth: boolean }) {
 
 function ReviewRow({ item, onDone }: { item: QueueItem; onDone: () => void }) {
   const c = useZoneCopy();
+  const { locale } = useTranslation();
   const [note, setNote]   = useState('');
   const [busy, setBusy]   = useState<null | 'VERIFY' | 'REVOKE'>(null);
   const [error, setError] = useState<string | null>(null);
@@ -114,14 +117,14 @@ function ReviewRow({ item, onDone }: { item: QueueItem; onDone: () => void }) {
           </span>
         )}
       </div>
-      {item.summary && <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 4 }}>{item.summary}</div>}
+      {item.summary && <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 4 }}>{localSummary(item.summary, locale)}</div>}
 
       {/* Append-only evidence timeline */}
       {item.evidence && item.evidence.length > 0 && (
         <ul style={{ margin: '10px 0 0', padding: 0, listStyle: 'none', display: 'grid', gap: 4 }}>
           {item.evidence.map((ev, i) => (
-            <li key={i} style={{ fontSize: 11.5, color: TEC_COLORS.subtext, lineHeight: 1.5, borderLeft: `2px solid ${TEC_COLORS.gold}44`, paddingLeft: 8 }}>
-              <span style={{ color: TEC_COLORS.gold }}>{ev.kind}</span> · {ev.note} <span style={{ opacity: 0.6 }}>({ev.source})</span>
+            <li key={i} style={{ fontSize: 11.5, color: TEC_COLORS.subtext, lineHeight: 1.5, borderInlineStart: `2px solid ${TEC_COLORS.gold}44`, paddingInlineStart: 8 }}>
+              <span style={{ color: TEC_COLORS.gold }}>{kindLabel(ev.kind, locale)}</span> · <bdi>{localNote(ev.note, locale)}</bdi> <span style={{ opacity: 0.6 }}>({sourceLabel(ev.source, locale)})</span>
             </li>
           ))}
         </ul>

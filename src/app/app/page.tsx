@@ -21,6 +21,7 @@ import { VerificationPanel } from './components/VerificationPanel';
 import { ReviewPanel } from './components/ReviewPanel';
 import { ENTITY_TYPES } from '@/lib/zone/registry';
 import { useZoneCopy } from '@/lib/zone/copy';
+import { localSummary } from '@/lib/zone/seed-text';
 import { Icon, KIND_ICON } from './components/Icon';
 
 // Flat entity shape served by /api/bff/zone/registry (real backend).
@@ -32,7 +33,7 @@ interface RegistryEntity {
 function ZoneHome() {
   const { user, isLoading, isAuthenticated } = usePiAuth();
   const me = useMe(); // server-resolved Pi username (Pi Browser hides tec_user from client JS — C-123 §3)
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const c = useZoneCopy();
   const [tab, setTab] = useState<ZoneTab>('home');
 
@@ -174,7 +175,7 @@ function ZoneHome() {
                               </span>
                             </div>
                             {e.domain && <div style={{ fontSize: 11, color: TEC_COLORS.gold, marginTop: 3 }}>{e.domain}</div>}
-                            <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 5, lineHeight: 1.5 }}>{e.summary}</div>
+                            <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 5, lineHeight: 1.5 }}>{localSummary(e.summary, locale)}</div>
                           </Link>
                         );
                       })}

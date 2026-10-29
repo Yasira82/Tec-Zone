@@ -5,11 +5,14 @@ import Link from 'next/link';
 import { TEC_COLORS } from '@yasser172/tec-ui';
 import type { EntitySource, PublicEntity } from '@/lib/zone/server';
 import { useZoneCopy } from '@/lib/zone/copy';
+import { useTranslation } from '@/lib/i18n';
+import { localSummary, localNote, kindLabel } from '@/lib/zone/seed-text';
 import { Icon } from '@/app/app/components/Icon';
 import ShareBadge from './ShareBadge';
 
 export function VerifyView({ entity, source }: { entity: PublicEntity | null; source: EntitySource }) {
   const c = useZoneCopy();
+  const { locale } = useTranslation();
   const wrap: React.CSSProperties = {
     minHeight: '100vh', background: TEC_COLORS.bg, color: TEC_COLORS.text,
     padding: '32px 22px', fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -62,7 +65,7 @@ export function VerifyView({ entity, source }: { entity: PublicEntity | null; so
           </div>
         </div>
 
-        <p style={{ fontSize: 14, color: TEC_COLORS.subtext, margin: '14px 0 0', lineHeight: 1.6 }}>{entity.summary}</p>
+        <p style={{ fontSize: 14, color: TEC_COLORS.subtext, margin: '14px 0 0', lineHeight: 1.6 }}>{localSummary(entity.summary, locale)}</p>
         {entity.verifiedAt && (
           <p style={{ fontSize: 12, color: TEC_COLORS.subtext, margin: '8px 0 0' }}>{c.page.verifiedOn(entity.verifiedAt)}</p>
         )}
@@ -81,9 +84,9 @@ export function VerifyView({ entity, source }: { entity: PublicEntity | null; so
             <div key={i} style={{ background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}22`, borderRadius: 12, padding: 14 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Icon name="check" size={15} color={TEC_COLORS.success} strokeWidth={2.6} />
-                <span style={{ fontSize: 14, fontWeight: 800, color: TEC_COLORS.text }}>{ev.criterion}</span>
+                <span style={{ fontSize: 14, fontWeight: 800, color: TEC_COLORS.text }}>{kindLabel(ev.criterion, locale)}</span>
               </div>
-              <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 6, lineHeight: 1.5 }}>{ev.detail}</div>
+              <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 6, lineHeight: 1.5 }}>{localNote(ev.detail, locale)}</div>
               <div style={{ fontSize: 11, color: TEC_COLORS.subtext, marginTop: 8, opacity: 0.8 }}>
                 {c.page.reviewer}: <bdi>{ev.reviewer}</bdi> · <bdi>{ev.recordedAt}</bdi>
               </div>
