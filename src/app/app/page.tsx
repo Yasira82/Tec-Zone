@@ -20,6 +20,8 @@ import { TrustCheck } from './components/TrustCheck';
 import { VerificationPanel } from './components/VerificationPanel';
 import { ReviewPanel } from './components/ReviewPanel';
 import { ENTITY_TYPES } from '@/lib/zone/registry';
+import { useZoneCopy } from '@/lib/zone/copy';
+import { Icon, KIND_ICON } from './components/Icon';
 
 // Flat entity shape served by /api/bff/zone/registry (real backend).
 interface RegistryEntity {
@@ -31,6 +33,7 @@ function ZoneHome() {
   const { user, isLoading, isAuthenticated } = usePiAuth();
   const me = useMe(); // server-resolved Pi username (Pi Browser hides tec_user from client JS — C-123 §3)
   const { t } = useTranslation();
+  const c = useZoneCopy();
   const [tab, setTab] = useState<ZoneTab>('home');
 
   /**
@@ -107,7 +110,7 @@ function ZoneHome() {
             <TrustCheck />
             {/* Zone Pro — real Pi U2A payment (also the Pi Portal "Process a Transaction" step) */}
             <ZonePro />
-            <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '24px 0 0', lineHeight: 1.5 }}>{t.zone.footer}</p>
+            <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '24px 0 0', lineHeight: 1.5 }}>{c.footer}</p>
             <InviteCard />
           </>
         )}
@@ -124,32 +127,31 @@ function ZoneHome() {
         {tab === 'registry' && (
           <section style={{ marginTop: 8 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-              <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: 0 }}>Verified Registry</h2>
+              <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: 0 }}>{c.registry.title}</h2>
               {status === 'ready' && (
-                <span style={{ fontSize: 11, color: TEC_COLORS.gold, border: `1px solid ${TEC_COLORS.gold}33`, borderRadius: 999, padding: '2px 10px' }}>V1 · live registry</span>
+                <span style={{ fontSize: 11, color: TEC_COLORS.gold, border: `1px solid ${TEC_COLORS.gold}33`, borderRadius: 999, padding: '2px 10px' }}>V1 · {c.registry.live}</span>
               )}
             </div>
             <p style={{ fontSize: 12, color: TEC_COLORS.subtext, margin: '6px 0 14px', lineHeight: 1.5 }}>
-              Evidence-based, human-reviewed verification — “Zone Verified” is earned, never
-              bought. Tap an entity to see its evidence.
+              {c.registry.hint}
             </p>
 
             {status === 'loading' && (
-              <div style={{ fontSize: 13, color: TEC_COLORS.subtext, padding: '20px 0', textAlign: 'center' }}>Loading the verified registry…</div>
+              <div style={{ fontSize: 13, color: TEC_COLORS.subtext, padding: '20px 0', textAlign: 'center' }}>{c.registry.loading}</div>
             )}
             {status === 'unavailable' && (
               <div style={{ background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}22`, borderRadius: 12, padding: 20, textAlign: 'center', color: TEC_COLORS.subtext, fontSize: 13 }}>
-                The verified registry is unavailable right now. Please try again shortly — Zone never shows
-                unconfirmed entities as verified.
+                {c.registry.unavailable}
               </div>
             )}
 
-            {status === 'ready' && ENTITY_TYPES.map(({ type, icon, title: groupTitle, blurb }) => {
+            {status === 'ready' && ENTITY_TYPES.map(({ type }) => {
+              const { title: groupTitle, blurb } = c.groups[type];
               const group = entities.filter((e) => e.type === type);
               return (
                 <div key={type} style={{ marginTop: 18 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 16 }}>{icon}</span>
+                    <Icon name={KIND_ICON[type] ?? 'shield'} size={17} color={TEC_COLORS.gold} strokeWidth={1.9} />
                     <span style={{ fontSize: 14, fontWeight: 800, color: TEC_COLORS.text }}>{groupTitle}</span>
                     <span style={{ fontSize: 11, color: TEC_COLORS.subtext }}>· {group.length}</span>
                   </div>
@@ -168,7 +170,7 @@ function ZoneHome() {
                             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
                               <span style={{ fontSize: 14, fontWeight: 800, color: TEC_COLORS.text }}>{e.name}</span>
                               <span style={{ ...badge, color: isVerified ? TEC_COLORS.gold : TEC_COLORS.subtext, borderColor: isVerified ? `${TEC_COLORS.gold}55` : `${TEC_COLORS.subtext}55` }}>
-                                {isVerified ? '🛡️ Verified' : e.status}
+                                {c.status[e.status] ?? e.status}
                               </span>
                             </div>
                             {e.domain && <div style={{ fontSize: 11, color: TEC_COLORS.gold, marginTop: 3 }}>{e.domain}</div>}

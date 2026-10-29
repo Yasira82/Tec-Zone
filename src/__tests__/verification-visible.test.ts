@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { zoneCopy } from '@/lib/zone/copy';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -59,8 +60,11 @@ describe('no branch of the applicant panel renders an empty screen', () => {
   it('says something to a signed-out visitor instead of vanishing', () => {
     // Applying for verification is the reason a merchant opens this app. Tell
     // them what it does and how to start.
+    // The words live in lib/zone/copy.ts now (both languages); the branch must still say them.
     const signedOut = panel.slice(panel.indexOf('if (!isAuth)'));
-    expect(signedOut.slice(0, 600)).toMatch(/Sign in/i);
+    expect(signedOut.slice(0, 600)).toMatch(/c\.apply\.hintSignedOut/);
+    expect(zoneCopy('en').apply.hintSignedOut).toMatch(/Sign in/i);
+    expect(zoneCopy('ar').apply.hintSignedOut).toMatch(/سجّل/);
   });
 
   it('says something while the session resolves', () => {

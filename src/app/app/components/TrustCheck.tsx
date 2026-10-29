@@ -7,17 +7,16 @@
 import { useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { TEC_COLORS } from '@yasser172/tec-ui';
+import { useZoneCopy } from '@/lib/zone/copy';
+import { Icon, KIND_ICON } from './Icon';
 
 interface Hit {
   handle: string; type: string; name: string; summary: string;
   status: string; verifiedAt: string | null; evidenceCount: number;
 }
 
-const TYPE_ICON: Record<string, string> = {
-  project: '🚀', merchant: '🏪', builder: '🛠️', community: '🌐',
-};
-
 export function TrustCheck() {
+  const c = useZoneCopy();
   const [q, setQ]         = useState('');
   const [hits, setHits]   = useState<Hit[]>([]);
   const [state, setState] = useState<'idle' | 'searching' | 'done'>('idle');
@@ -47,18 +46,18 @@ export function TrustCheck() {
   return (
     <section style={card}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-        <span style={{ fontSize: 18 }}>🛡️</span>
-        <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: 0 }}>Trust Check</h2>
+        <Icon name="shield" size={18} color={TEC_COLORS.gold} strokeWidth={2} />
+        <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: 0 }}>{c.check.title}</h2>
       </div>
       <p style={{ fontSize: 12, color: TEC_COLORS.subtext, margin: '0 0 12px', lineHeight: 1.5 }}>
-        Is it Zone Verified? Search a project, merchant, or builder to see its verified status + evidence.
+        {c.check.hint}
       </p>
 
       <input
         value={q}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Search — e.g. TEC Hub, a merchant, a builder…"
-        aria-label="Trust Check search"
+        placeholder={c.check.placeholder}
+        aria-label={c.check.aria}
         style={{
           width: '100%', boxSizing: 'border-box', background: TEC_COLORS.bg, color: TEC_COLORS.text,
           border: `1px solid ${TEC_COLORS.gold}44`, borderRadius: 10, padding: '11px 13px', fontSize: 14,
@@ -67,12 +66,11 @@ export function TrustCheck() {
 
       <div style={{ marginTop: 12 }}>
         {state === 'searching' && (
-          <div style={{ fontSize: 13, color: TEC_COLORS.subtext, padding: '6px 0' }}>Checking…</div>
+          <div style={{ fontSize: 13, color: TEC_COLORS.subtext, padding: '6px 0' }}>{c.check.searching}</div>
         )}
         {state === 'done' && hits.length === 0 && (
           <div style={{ fontSize: 13, color: TEC_COLORS.subtext, padding: '6px 0', lineHeight: 1.5 }}>
-            No match in the verified registry. Zone never shows an entity as verified without evidence —
-            an unlisted entity simply isn’t verified yet.
+            {c.check.none}
           </div>
         )}
         {hits.length > 0 && (
@@ -85,11 +83,11 @@ export function TrustCheck() {
                   background: TEC_COLORS.bg, border: `1px solid ${verified ? TEC_COLORS.gold + '55' : '#ffffff14'}`,
                   borderRadius: 10, padding: '10px 12px',
                 }}>
-                  <span style={{ fontSize: 18 }}>{TYPE_ICON[e.type] ?? '•'}</span>
+                  <Icon name={KIND_ICON[e.type] ?? 'shield'} size={18} color={verified ? TEC_COLORS.gold : TEC_COLORS.subtext} strokeWidth={1.9} />
                   <span style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ display: 'block', fontSize: 14, fontWeight: 700, color: TEC_COLORS.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.name}</span>
                     <span style={{ display: 'block', fontSize: 11, color: TEC_COLORS.subtext, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {e.evidenceCount} evidence record{e.evidenceCount === 1 ? '' : 's'}
+                      {c.evidenceCount(e.evidenceCount)}
                     </span>
                   </span>
                   <span style={{
@@ -98,7 +96,7 @@ export function TrustCheck() {
                     border: `1px solid ${verified ? TEC_COLORS.gold + '55' : TEC_COLORS.subtext + '55'}`,
                     borderRadius: 999, padding: '2px 9px',
                   }}>
-                    {verified ? '🛡️ Verified' : e.status}
+                    {c.status[e.status] ?? e.status}
                   </span>
                 </Link>
               );
