@@ -8,8 +8,11 @@
 // (C-135 §4): the code is fetched live; with no session it shows an honest prompt.
 import { useEffect, useState } from 'react';
 import { TEC_COLORS } from '@yasser172/tec-ui';
+import { useZoneCopy } from '@/lib/zone/copy';
+import { Icon } from '@/app/app/components/Icon';
 
 export function InviteCard() {
+  const c = useZoneCopy();
   const [code, setCode]   = useState<string | null>(null);
   const [state, setState] = useState<'loading' | 'ready' | 'anon'>('loading');
   const [copied, setCopied] = useState(false);
@@ -48,18 +51,18 @@ export function InviteCard() {
   return (
     <section style={card}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: 18 }}>🎁</span>
-        <span style={{ fontSize: 15, fontWeight: 800, color: TEC_COLORS.text }}>Invite &amp; earn</span>
+        <Icon name="gift" size={17} color={TEC_COLORS.gold} strokeWidth={1.9} />
+        <span style={{ fontSize: 15, fontWeight: 800, color: TEC_COLORS.text }}>{c.invite.title}</span>
       </div>
 
       {state === 'anon' ? (
         <p style={{ fontSize: 13, color: TEC_COLORS.subtext, margin: '8px 0 0', lineHeight: 1.6 }}>
-          Sign in with Pi to get your invite link — share it and earn a reward when a friend joins.
+          {c.invite.anon}
         </p>
       ) : (
         <>
           <p style={{ fontSize: 13, color: TEC_COLORS.subtext, margin: '8px 0 12px', lineHeight: 1.6 }}>
-            Share your link — you both earn when a friend joins TEC through it.
+            {c.invite.body}
           </p>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
             <code style={{ flex: 1, minWidth: 200, fontSize: 12, color: TEC_COLORS.gold, background: '#00000030', border: `1px solid ${TEC_COLORS.gold}22`, borderRadius: 8, padding: '9px 12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -69,7 +72,7 @@ export function InviteCard() {
               onClick={copy}
               style={{ fontSize: 13, fontWeight: 800, color: '#0a0800', background: `linear-gradient(135deg, ${TEC_COLORS.gold}, ${TEC_COLORS.goldDark})`, border: 'none', borderRadius: 8, padding: '9px 16px', cursor: 'pointer', whiteSpace: 'nowrap' }}
             >
-              {copied ? '✓ Copied' : 'Copy link'}
+              {copied ? c.invite.copied : c.invite.copy}
             </button>
           </div>
         </>

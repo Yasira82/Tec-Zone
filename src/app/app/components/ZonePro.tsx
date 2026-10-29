@@ -14,6 +14,8 @@ import {
   createU2APayment,
 } from '@/lib/pi-payment';
 import { CancelProButton } from '@/components/pro/CancelProButton';
+import { useZoneCopy } from '@/lib/zone/copy';
+import { Icon } from './Icon';
 
 const PRICE   = 10;                     // π / month
 const ITEM_ID = 'zone_pro_monthly';
@@ -36,6 +38,7 @@ type Status = 'idle' | 'creating' | 'paying' | 'success' | 'error';
 
 export function ZonePro() {
   const [piReady, setPiReady] = useState(false);
+  const c = useZoneCopy();
   const [status,  setStatus]  = useState<Status>('idle');
   const [message, setMessage] = useState('');
 
@@ -79,7 +82,7 @@ export function ZonePro() {
     const st = p.get('payment_status');
     if (!st) return;
     if (st === 'success') setStatus('success');
-    else if (st === 'error') { setStatus('error'); setMessage('Payment did not complete. Please try again.'); }
+    else if (st === 'error') { setStatus('error'); setMessage(''); }  // worded at render, in the reader's language
     window.history.replaceState({}, '', '/app');
   }, []);
 
@@ -100,7 +103,7 @@ export function ZonePro() {
       const internalId = await createPaymentRecord(PRICE, ITEM_ID, MEMO);
       if (!internalId) {
         setStatus('error');
-        setMessage('Could not start the payment. Please sign in again and retry.');
+        setMessage(c.pro.startFailed);
         return;
       }
       setStatus('paying');
@@ -111,11 +114,11 @@ export function ZonePro() {
         setStatus('idle');
       } else {
         setStatus('error');
-        setMessage(asText(result.message) || 'Payment failed. Please try again.');
+        setMessage(asText(result.message) || c.pro.failed);
       }
     } catch (err) {
       setStatus('error');
-      setMessage(asText(err) || 'Payment failed. Please try again.');
+      setMessage(asText(err) || c.pro.failed);
     }
   };
 
@@ -130,13 +133,14 @@ export function ZonePro() {
   if (isSubscribed) {
     return (
       <div style={{ background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}55`, borderRadius: 16, padding: 20, marginTop: 24 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: TEC_COLORS.gold }}>★ You’re on Pro</div>
+        <div style={{ fontSize: 15, fontWeight: 800, color: TEC_COLORS.gold }}>★ {c.pro.onPro}</div>
         <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 6 }}>
-          Your subscription is active. Thanks for supporting TEC.
+          {c.pro.onProBody}
         </div>
         {typeof daysRemaining === 'number' && (
           <div style={{ fontSize: 12, fontWeight: daysRemaining <= 7 ? 700 : 600, color: daysRemaining <= 7 ? TEC_COLORS.gold : TEC_COLORS.subtext, marginTop: 8 }}>
-            {daysRemaining <= 7 ? '⏳ ' : ''}Expires in {daysRemaining} day{daysRemaining === 1 ? '' : 's'}{daysRemaining <= 7 ? ' — re-subscribe to keep Pro (one-time monthly, no auto-renewal).' : '.'}
+            {daysRemaining <= 7 ? '⏳ ' : ''}{c.pro.expires(daysRemaining)}
+            {daysRemaining <= 7 && <div style={{ fontWeight: 500, marginTop: 2 }}>{c.pro.renew}</div>}
           </div>
         )}
         <CancelProButton />
@@ -147,10 +151,9 @@ export function ZonePro() {
   if (status === 'success') {
     return (
       <div style={{ ...card, borderColor: `${TEC_COLORS.success}66` }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: TEC_COLORS.success }}>✅ Zone Pro active</div>
+        <div style={{ fontSize: 15, fontWeight: 800, color: TEC_COLORS.success }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Icon name="check" size={16} color={TEC_COLORS.success} strokeWidth={2.4} />{c.pro.active}</span></div>
         <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 6, lineHeight: 1.5 }}>
-          Payment received. Your next verification request gets <strong style={{ color: TEC_COLORS.gold }}>priority review</strong> —
-          it jumps the queue so a reviewer sees it sooner. (Speed only — the verdict is always based on evidence.)
+          {c.pro.activeBody}
         </div>
       </div>
     );
@@ -161,16 +164,13 @@ export function ZonePro() {
   return (
     <div style={card}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: TEC_COLORS.gold }}>🛡️ Zone Pro</div>
+        <div style={{ fontSize: 15, fontWeight: 800, color: TEC_COLORS.gold }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Icon name="shield" size={16} color={TEC_COLORS.gold} strokeWidth={2} />Zone Pro</span></div>
         <div style={{ fontSize: 20, fontWeight: 900, color: TEC_COLORS.text }}>
-          {PRICE}π<span style={{ fontSize: 12, color: TEC_COLORS.subtext, fontWeight: 600 }}> / month</span>
+          {PRICE}π<span style={{ fontSize: 12, color: TEC_COLORS.subtext, fontWeight: 600 }}> {c.pro.perMonth}</span>
         </div>
       </div>
       <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 8, lineHeight: 1.5 }}>
-        For builders and merchants — priority verification review, a detailed
-        evidence report, and an embeddable Zone Verified badge. Verification is
-        evidence-based and cannot be purchased — Pro only speeds the
-        review, never the verdict.
+        {c.pro.body}
       </div>
 
       <button
@@ -184,13 +184,13 @@ export function ZonePro() {
           cursor: busy ? 'not-allowed' : 'pointer',
         }}
       >
-        {status === 'creating' ? 'Preparing…'
-          : status === 'paying' ? 'Confirm in Pi…'
-          : `Upgrade — ${PRICE}π / month`}
+        {status === 'creating' ? c.pro.preparing
+          : status === 'paying' ? c.pro.confirmInPi
+          : c.pro.upgrade(PRICE)}
       </button>
 
       {status === 'error' && (
-        <div style={{ fontSize: 12, color: TEC_COLORS.error, marginTop: 10 }}>{message}</div>
+        <div style={{ fontSize: 12, color: TEC_COLORS.error, marginTop: 10 }}>{message || c.pro.failed}</div>
       )}
     </div>
   );

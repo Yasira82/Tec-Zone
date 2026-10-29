@@ -7,8 +7,11 @@
 // never bought (C-120 §7); this only lets an already-verified entity broadcast it.
 import { useState } from 'react';
 import { TEC_COLORS } from '@yasser172/tec-ui';
+import { useZoneCopy } from '@/lib/zone/copy';
+import { Icon } from '@/app/app/components/Icon';
 
 function CopyRow({ label, value }: { label: string; value: string }) {
+  const c = useZoneCopy();
   const [copied, setCopied] = useState(false);
   async function copy() {
     try { await navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 2000); }
@@ -26,13 +29,14 @@ function CopyRow({ label, value }: { label: string; value: string }) {
         <button onClick={copy} style={{
           background: copied ? TEC_COLORS.success : TEC_COLORS.gold, color: '#0a0800', border: 'none',
           borderRadius: 8, padding: '0 14px', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
-        }}>{copied ? 'Copied' : 'Copy'}</button>
+        }}>{copied ? c.page.copied : c.page.copy}</button>
       </div>
     </div>
   );
 }
 
 export default function ShareBadge({ handle }: { handle: string }) {
+  const c = useZoneCopy();
   // Absolute URLs so the copied snippets work when pasted on ANY external site.
   const [origin] = useState(() => (typeof window !== 'undefined' ? window.location.origin : 'https://zone.tecosystem.app'));
   const verifyUrl = `${origin}/verify/${handle}`;
@@ -42,20 +46,20 @@ export default function ShareBadge({ handle }: { handle: string }) {
   return (
     <section style={{ marginTop: 26, background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}22`, borderRadius: 12, padding: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: 16 }}>🔗</span>
-        <h2 style={{ fontSize: 15, fontWeight: 800, color: TEC_COLORS.text, margin: 0 }}>Share your verification</h2>
+        <Icon name="link" size={16} color={TEC_COLORS.gold} strokeWidth={2} />
+        <h2 style={{ fontSize: 15, fontWeight: 800, color: TEC_COLORS.text, margin: 0 }}>{c.page.shareTitle}</h2>
       </div>
       <p style={{ fontSize: 12, color: TEC_COLORS.subtext, margin: '6px 0 12px', lineHeight: 1.5 }}>
-        Put the live badge on your own site or app — anyone in the Pi ecosystem can tap it to see the evidence.
+        {c.page.shareHint}
       </p>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ fontSize: 12, color: TEC_COLORS.subtext }}>Preview:</span>
+        <span style={{ fontSize: 12, color: TEC_COLORS.subtext }}>{c.page.preview}</span>
         <img src={`/badge/${handle}.svg`} alt="Zone Verified badge" height={20} />
       </div>
 
-      <CopyRow label="Verification link" value={verifyUrl} />
-      <CopyRow label="Embed code (HTML)" value={embed} />
+      <CopyRow label={c.page.link} value={verifyUrl} />
+      <CopyRow label={c.page.embed} value={embed} />
     </section>
   );
 }

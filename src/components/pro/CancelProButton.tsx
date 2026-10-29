@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useZoneCopy } from '@/lib/zone/copy';
 
 /**
  * Cancel THIS app's Pro — and only this app's (owner decision, 2026-10-02: each
@@ -17,6 +18,7 @@ const csrf = (): string => {
 };
 
 export function CancelProButton({ onCancelled }: { onCancelled?: () => void } = {}) {
+  const c = useZoneCopy();
   const [show,   setShow]   = useState(false);
   const [busy,   setBusy]   = useState(false);
   const [error,  setError]  = useState('');
@@ -37,7 +39,7 @@ export function CancelProButton({ onCancelled }: { onCancelled?: () => void } = 
 
   const cancel = async () => {
     if (busy) return;
-    if (!window.confirm('Cancel Pro in this app? Your Pro here ends now. Other apps and the Hub plan are not affected.')) return;
+    if (!window.confirm(c.pro.cancelConfirm)) return;
     setBusy(true); setError('');
     try {
       const res = await fetch('/api/bff/subscription/cancel', {
@@ -47,12 +49,12 @@ export function CancelProButton({ onCancelled }: { onCancelled?: () => void } = 
       });
       if (!res.ok) {
         const b = await res.json().catch(() => ({})) as { message?: unknown; error?: unknown };
-        throw new Error(String(b.message ?? b.error ?? 'Could not cancel'));
+        throw new Error(String(b.message ?? b.error ?? c.pro.cancelFailed));
       }
       setShow(false);
       if (onCancelled) onCancelled(); else window.location.reload();
     } catch (e) {
-      setError((e as Error).message || 'Could not cancel');
+      setError((e as Error).message || c.pro.cancelFailed);
     } finally {
       setBusy(false);
     }
@@ -69,7 +71,7 @@ export function CancelProButton({ onCancelled }: { onCancelled?: () => void } = 
           fontSize: 12, fontWeight: 700,
         }}
       >
-        {busy ? 'Cancelling…' : 'Cancel subscription'}
+        {busy ? c.pro.cancelling : c.pro.cancel}
       </button>
       {error && <div role="alert" style={{ fontSize: 11, color: '#ef4444', marginTop: 6 }}>{error}</div>}
     </div>

@@ -9,6 +9,8 @@ import { useEffect, useState } from 'react';
 import { TEC_COLORS } from '@yasser172/tec-ui';
 import { buildHeaders } from '@/lib/request-id';
 import { reportError } from '@/lib/observability/reportError';
+import { useZoneCopy } from '@/lib/zone/copy';
+import { Icon } from './Icon';
 
 interface Evidence { kind: string; note: string; source: string; created_at?: string }
 interface QueueItem {
@@ -19,6 +21,7 @@ interface QueueItem {
 // `isAuth` is accepted for API compatibility with the caller but intentionally not
 // used to gate the load — see the note on the effect below (C-123).
 export function ReviewPanel(_props: { isAuth: boolean }) {
+  const c = useZoneCopy();
   const [queue, setQueue]   = useState<QueueItem[] | null>(null);
   const [isAdmin, setAdmin] = useState(false);
 
@@ -51,19 +54,18 @@ export function ReviewPanel(_props: { isAuth: boolean }) {
   return (
     <section style={{ marginTop: 28 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-        <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: 0 }}>Review queue</h2>
+        <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: 0 }}>{c.review.title}</h2>
         <span style={{ fontSize: 11, color: TEC_COLORS.gold, border: `1px solid ${TEC_COLORS.gold}33`, borderRadius: 999, padding: '2px 10px' }}>
-          reviewer · {queue?.length ?? 0} pending
+          {c.review.pending(queue?.length ?? 0)}
         </span>
       </div>
       <p style={{ fontSize: 12, color: TEC_COLORS.subtext, margin: '6px 0 12px', lineHeight: 1.5 }}>
-        Read the evidence, then verify or revoke with a note. You may not decide your own
-        submission — a fair, independent review.
+        {c.review.hint}
       </p>
 
       {queue && queue.length === 0 && (
         <div style={{ background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}22`, borderRadius: 12, padding: 14, fontSize: 13, color: TEC_COLORS.subtext, textAlign: 'center' }}>
-          Nothing pending review. 🎉
+          {c.review.empty}
         </div>
       )}
 
@@ -75,13 +77,14 @@ export function ReviewPanel(_props: { isAuth: boolean }) {
 }
 
 function ReviewRow({ item, onDone }: { item: QueueItem; onDone: () => void }) {
+  const c = useZoneCopy();
   const [note, setNote]   = useState('');
   const [busy, setBusy]   = useState<null | 'VERIFY' | 'REVOKE'>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function decide(decision: 'VERIFY' | 'REVOKE') {
     if (busy) return;
-    if (note.trim().length < 2) { setError('A review note is required.'); return; }
+    if (note.trim().length < 2) { setError(c.review.noteRequired); return; }
     setBusy(decision); setError(null);
     try {
       const res = await fetch(`/api/bff/zone/entity/${encodeURIComponent(item.handle)}/review`, {
@@ -90,11 +93,11 @@ function ReviewRow({ item, onDone }: { item: QueueItem; onDone: () => void }) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(res.status === 403 ? 'You cannot decide your own submission.' : (data.error ?? 'Could not submit the decision.'));
+        setError(res.status === 403 ? c.review.own : (data.error ?? c.review.failed));
         return;
       }
       onDone();
-    } catch { setError('Network error — please try again.'); }
+    } catch { setError(c.apply.network); }
     finally { setBusy(null); }
   }
 
@@ -104,10 +107,10 @@ function ReviewRow({ item, onDone }: { item: QueueItem; onDone: () => void }) {
         <span style={{ fontSize: 13.5, fontWeight: 800, color: TEC_COLORS.text }}>
           {item.name} <span style={{ fontSize: 11, fontWeight: 400, color: TEC_COLORS.subtext }}>@{item.handle} · {item.type?.toLowerCase()}</span>
         </span>
-        {item.owner && <span style={{ fontSize: 10.5, color: TEC_COLORS.subtext }}>by {item.owner}</span>}
+        {item.owner && <span style={{ fontSize: 10.5, color: TEC_COLORS.subtext }}>{c.review.by(item.owner)}</span>}
         {item.priority && (
           <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 800, color: TEC_COLORS.gold, border: `1px solid ${TEC_COLORS.gold}55`, borderRadius: 999, padding: '1px 7px' }}>
-            ⭐ Priority (Pro)
+            {c.review.priority}
           </span>
         )}
       </div>
@@ -127,16 +130,16 @@ function ReviewRow({ item, onDone }: { item: QueueItem; onDone: () => void }) {
       <div style={{ marginTop: 12, display: 'grid', gap: 8 }}>
         <input
           value={note} onChange={(e) => setNote(e.target.value)} maxLength={200}
-          placeholder="Review note (required)…"
-          style={{ width: '100%', padding: '9px 11px', background: TEC_COLORS.bg, color: TEC_COLORS.text, border: `1px solid ${TEC_COLORS.gold}22`, borderRadius: 8, fontSize: 13, outline: 'none' }}
+          placeholder={c.review.notePh}
+          style={{ width: '100%', boxSizing: 'border-box', padding: '9px 11px', fontFamily: 'inherit', background: TEC_COLORS.bg, color: TEC_COLORS.text, border: `1px solid ${TEC_COLORS.gold}22`, borderRadius: 8, fontSize: 13, outline: 'none' }}
         />
         {error && <div style={{ color: '#EF4444', fontSize: 12.5 }}>{error}</div>}
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => decide('VERIFY')} disabled={!!busy} style={btn(!!busy, TEC_COLORS.gold, '#050816')}>
-            {busy === 'VERIFY' ? 'Verifying…' : '🛡️ Verify'}
+            {busy === 'VERIFY' ? c.review.verifying : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Icon name="shield" size={14} strokeWidth={2.2} />{c.review.verify}</span>}
           </button>
           <button onClick={() => decide('REVOKE')} disabled={!!busy} style={btn(!!busy, 'transparent', '#EF4444', '#EF4444')}>
-            {busy === 'REVOKE' ? 'Revoking…' : 'Revoke'}
+            {busy === 'REVOKE' ? c.review.revoking : c.review.revoke}
           </button>
         </div>
       </div>

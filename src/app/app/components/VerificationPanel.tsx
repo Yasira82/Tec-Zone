@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react';
 import { TEC_COLORS } from '@yasser172/tec-ui';
 import { buildHeaders } from '@/lib/request-id';
 import { reportError } from '@/lib/observability/reportError';
+import { useZoneCopy, type ZoneCopy } from '@/lib/zone/copy';
 
 interface Submission {
   handle: string; type: string; name: string; summary?: string | null;
@@ -17,12 +18,8 @@ interface Submission {
   _count?: { evidence?: number };
 }
 
-const TYPES = [
-  { v: 'PROJECT',   label: '🚀 Project' },
-  { v: 'MERCHANT',  label: '🏪 Merchant' },
-  { v: 'BUILDER',   label: '🛠️ Builder' },
-  { v: 'COMMUNITY', label: '🌐 Community' },
-];
+const TYPES = ['PROJECT', 'MERCHANT', 'BUILDER', 'COMMUNITY'] as const;
+const kindOf = (v: string) => v.toLowerCase() as 'project' | 'merchant' | 'builder' | 'community';
 
 const STATUS_TONE: Record<string, string> = {
   PENDING:  TEC_COLORS.subtext,
@@ -39,6 +36,7 @@ export function VerificationPanel({ isAuth, authLoading = false }: {
    */
   authLoading?: boolean;
 }) {
+  const c = useZoneCopy();
   const [subs, setSubs]   = useState<Submission[] | null>(null);
   const [type, setType]   = useState('PROJECT');
   const [name, setName]   = useState('');
@@ -70,7 +68,7 @@ export function VerificationPanel({ isAuth, authLoading = false }: {
   if (authLoading) {
     return (
       <section style={{ marginTop: 28 }}>
-        <p style={{ fontSize: 13, color: TEC_COLORS.subtext }}>Loading…</p>
+        <p style={{ fontSize: 13, color: TEC_COLORS.subtext }}>{c.apply.loading}</p>
       </section>
     );
   }
@@ -79,11 +77,10 @@ export function VerificationPanel({ isAuth, authLoading = false }: {
     return (
       <section style={{ marginTop: 28 }}>
         <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: '0 0 4px' }}>
-          Apply for verification
+          {c.apply.title}
         </h2>
         <p style={{ fontSize: 12.5, color: TEC_COLORS.subtext, margin: 0, lineHeight: 1.55 }}>
-          Sign in with Pi to submit your project, business or community for review.
-          A human reviewer decides — verification is earned, never bought.
+          {c.apply.hintSignedOut}
         </p>
       </section>
     );
@@ -100,12 +97,12 @@ export function VerificationPanel({ isAuth, authLoading = false }: {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(res.status === 409 ? 'You already have a pending request.' : (data.error ?? 'Could not submit.'));
+        setError(res.status === 409 ? c.apply.pendingExists : (data.error ?? c.apply.failed));
         return;
       }
       setName(''); setSummary(''); setNote('');
       await load();
-    } catch { setError('Network error — please try again.'); }
+    } catch { setError(c.apply.network); }
     finally { setBusy(false); }
   }
 
@@ -114,52 +111,53 @@ export function VerificationPanel({ isAuth, authLoading = false }: {
     borderRadius: 12, padding: 14,
   };
   const input: React.CSSProperties = {
-    width: '100%', padding: '9px 11px', background: TEC_COLORS.bg, color: TEC_COLORS.text,
-    border: `1px solid ${TEC_COLORS.gold}22`, borderRadius: 8, fontSize: 13, outline: 'none',
+    // border-box: `width: 100%` plus padding pushed every field past the card's edge.
+    width: '100%', boxSizing: 'border-box', minWidth: 0, padding: '10px 11px', background: TEC_COLORS.bg, color: TEC_COLORS.text,
+    border: `1px solid ${TEC_COLORS.gold}22`, borderRadius: 8, fontSize: 14, outline: 'none', fontFamily: 'inherit',
   };
 
   return (
     <section style={{ marginTop: 28 }}>
-      <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: '0 0 4px' }}>Apply for verification</h2>
+      <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: '0 0 4px' }}>{c.apply.title}</h2>
       <p style={{ fontSize: 12, color: TEC_COLORS.subtext, margin: '0 0 12px', lineHeight: 1.5 }}>
-        Submit your entity, then attach evidence. A human reviewer decides — verification
-        is <strong style={{ color: TEC_COLORS.text }}>earned, never bought</strong>.
+        {c.apply.hint}
       </p>
 
       {/* My submissions */}
       {subs && subs.length > 0 && (
         <div style={{ display: 'grid', gap: 10, marginBottom: 16 }}>
           {subs.map((s) => (
-            <SubmissionRow key={s.handle} sub={s} onChanged={load} card={card} input={input} />
+            <SubmissionRow key={s.handle} sub={s} onChanged={load} card={card} input={input} c={c} />
           ))}
         </div>
       )}
 
       {/* Apply form */}
       <form onSubmit={submit} style={{ ...card, display: 'grid', gap: 10 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <label style={{ display: 'grid', gap: 4 }}>
-            <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>Type</span>
+        {/* minmax(0, 1fr): a plain 1fr column grows to its widest child and spills out. */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
+          <label style={{ display: 'grid', gap: 4, minWidth: 0 }}>
+            <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>{c.apply.type}</span>
             <select value={type} onChange={(e) => setType(e.target.value)} style={input}>
-              {TYPES.map((t) => <option key={t.v} value={t.v}>{t.label}</option>)}
+              {TYPES.map((v) => <option key={v} value={v}>{c.type[kindOf(v)]}</option>)}
             </select>
           </label>
-          <label style={{ display: 'grid', gap: 4 }}>
-            <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>Name</span>
-            <input value={name} onChange={(e) => setName(e.target.value)} required minLength={2} maxLength={80} placeholder="e.g. Pi Cafe" style={input} />
+          <label style={{ display: 'grid', gap: 4, minWidth: 0 }}>
+            <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>{c.apply.name}</span>
+            <input value={name} onChange={(e) => setName(e.target.value)} required minLength={2} maxLength={80} placeholder={c.apply.namePh} style={input} />
           </label>
         </div>
         <label style={{ display: 'grid', gap: 4 }}>
-          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>Summary <span style={{ opacity: 0.6 }}>(optional)</span></span>
-          <input value={summary} onChange={(e) => setSummary(e.target.value)} maxLength={140} placeholder="What is it?" style={input} />
+          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>{c.apply.summary} <span style={{ opacity: 0.6 }}>{c.apply.optional}</span></span>
+          <input value={summary} onChange={(e) => setSummary(e.target.value)} maxLength={140} placeholder={c.apply.summaryPh} style={input} />
         </label>
         <label style={{ display: 'grid', gap: 4 }}>
-          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>Opening note <span style={{ opacity: 0.6 }}>(optional)</span></span>
-          <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} placeholder="Why should this be verified?" style={input} />
+          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>{c.apply.note} <span style={{ opacity: 0.6 }}>{c.apply.optional}</span></span>
+          <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} placeholder={c.apply.notePh} style={input} />
         </label>
         {error && <div style={{ color: '#EF4444', fontSize: 12.5 }}>{error}</div>}
         <button type="submit" disabled={busy || name.trim().length < 2} style={primaryBtn(busy || name.trim().length < 2)}>
-          {busy ? 'Submitting…' : 'Submit for verification'}
+          {busy ? c.apply.submitting : c.apply.submit}
         </button>
       </form>
     </section>
@@ -167,10 +165,10 @@ export function VerificationPanel({ isAuth, authLoading = false }: {
 }
 
 function SubmissionRow({
-  sub, onChanged, card, input,
+  sub, onChanged, card, input, c,
 }: {
   sub: Submission; onChanged: () => void;
-  card: React.CSSProperties; input: React.CSSProperties;
+  card: React.CSSProperties; input: React.CSSProperties; c: ZoneCopy;
 }) {
   const [open, setOpen] = useState(false);
   const [evidence, setEvidence] = useState('');
@@ -189,10 +187,10 @@ function SubmissionRow({
         body: JSON.stringify({ kind: 'note', note: evidence }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) { setError(data.error ?? 'Could not add evidence.'); return; }
+      if (!res.ok) { setError(data.error ?? c.apply.evidenceFailed); return; }
       setEvidence(''); setOpen(false);
       onChanged();
-    } catch { setError('Network error — please try again.'); }
+    } catch { setError(c.apply.network); }
     finally { setBusy(false); }
   }
 
@@ -203,29 +201,29 @@ function SubmissionRow({
           {sub.name} <span style={{ fontSize: 11, fontWeight: 400, color: TEC_COLORS.subtext }}>@{sub.handle}</span>
         </span>
         <span style={{ fontSize: 10, fontWeight: 800, color: tone, border: `1px solid ${tone}55`, borderRadius: 999, padding: '2px 8px' }}>
-          {sub.status === 'VERIFIED' ? '🛡️ Verified' : sub.status}
+          {c.status[sub.status.toLowerCase()] ?? sub.status}
         </span>
       </div>
       <div style={{ fontSize: 11.5, color: TEC_COLORS.subtext, marginTop: 4 }}>
-        {(sub._count?.evidence ?? 0)} evidence record{(sub._count?.evidence ?? 0) === 1 ? '' : 's'}
-        {sub.reviewer ? ` · reviewed by ${sub.reviewer}` : ''}
+        {c.evidenceCount(sub._count?.evidence ?? 0)}
+        {sub.reviewer ? ` · ${c.apply.reviewedBy(sub.reviewer)}` : ''}
       </div>
 
       {isPending && (
         open ? (
           <form onSubmit={addEvidence} style={{ marginTop: 10, display: 'grid', gap: 8 }}>
             <input value={evidence} onChange={(e) => setEvidence(e.target.value)} required minLength={2} maxLength={200}
-              placeholder="Add supporting evidence…" style={input} />
+              placeholder={c.apply.evidencePh} style={input} />
             {error && <div style={{ color: '#EF4444', fontSize: 12 }}>{error}</div>}
             <div style={{ display: 'flex', gap: 8 }}>
               <button type="submit" disabled={busy || evidence.trim().length < 2} style={{ ...primaryBtn(busy || evidence.trim().length < 2), width: 'auto', padding: '8px 14px' }}>
-                {busy ? 'Adding…' : 'Add evidence'}
+                {busy ? c.apply.adding : c.apply.add}
               </button>
-              <button type="button" onClick={() => { setOpen(false); setError(null); }} style={ghostBtn}>Cancel</button>
+              <button type="button" onClick={() => { setOpen(false); setError(null); }} style={ghostBtn}>{c.apply.cancel}</button>
             </div>
           </form>
         ) : (
-          <button onClick={() => setOpen(true)} style={{ ...ghostBtn, marginTop: 10 }}>+ Add evidence</button>
+          <button onClick={() => setOpen(true)} style={{ ...ghostBtn, marginTop: 10 }}>{c.apply.addEvidence}</button>
         )
       )}
     </div>
