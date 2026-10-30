@@ -88,7 +88,7 @@ export function VerifyView({ entity, source }: { entity: PublicEntity | null; so
               </div>
               <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 6, lineHeight: 1.5 }}>{localNote(ev.detail, locale)}</div>
               <div style={{ fontSize: 11, color: TEC_COLORS.subtext, marginTop: 8, opacity: 0.8 }}>
-                {c.page.reviewer}: <bdi>{ev.reviewer}</bdi> · <bdi>{ev.recordedAt}</bdi>
+                {ev.fromApplicant ? c.page.byApplicant : <>{c.page.reviewer}: <bdi>{ev.reviewer}</bdi></>} · <bdi>{ev.recordedAt}</bdi>
               </div>
             </div>
           ))}
