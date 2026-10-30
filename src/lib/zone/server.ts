@@ -45,7 +45,9 @@ async function call(
 // "Zone Verified" is a factual claim backed by evidence — the detail page reads it
 // LIVE from the backend, never from a static sample (C-120 §4 / C-135 §4). An
 // unreachable backend resolves to `unavailable`; a live 404 to `not-found`.
-export interface PublicEvidence { criterion: string; detail: string; reviewer: string; recordedAt: string; }
+// `fromApplicant`: the record was written by the person who applied, not signed by a
+// reviewer — the page must not put the reviewer's name on it (it reads as self-review).
+export interface PublicEvidence { criterion: string; detail: string; reviewer: string; recordedAt: string; fromApplicant?: boolean; }
 export interface PublicEntity {
   id: string; type: string; name: string; summary: string;
   status: string; verifiedAt: string | null; domain?: string;
@@ -82,6 +84,7 @@ export async function resolvePublicEntity(
               detail:     String(ev.note ?? ''),
               reviewer:   String(ev.reviewer ?? e.reviewer ?? 'Zone reviewer'),
               recordedAt: day(ev.created_at),
+              fromApplicant: ev.source === 'applicant',
             })),
           },
           source: 'live',
