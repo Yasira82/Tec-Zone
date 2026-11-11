@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, act } from '@testing-library/react';
 import { createElement } from 'react';
+import { today } from '@/lib/pi/counted-once';
 
-// Once per person, not per visit (owner, 10 Nov 2026): a person Pi already
+// Once per person per day, not per visit (owner, 10 Nov 2026): a person Pi already
 // signed in here is counted again (the arrival is announced) without a new
 // Pi handshake; anyone else gets the warm-up as before.
 
@@ -36,11 +37,11 @@ describe('PiWarmup counts a visitor once', () => {
     // Pi answered: the registered callback remembers the person
     const remember = session.onSignedIn.mock.calls[0]?.[0] as () => void;
     remember();
-    expect(JSON.parse(window.localStorage.getItem('__tec_pi_counted') ?? '[]')).toContain('yas55er82');
+    expect(JSON.parse(window.localStorage.getItem('__tec_pi_counted_day') ?? '{}')).toEqual({ yas55er82: today() });
   });
 
   it('a repeat visit by the same person: arrival announced, no handshake', async () => {
-    window.localStorage.setItem('__tec_pi_counted', JSON.stringify(['yas55er82']));
+    window.localStorage.setItem('__tec_pi_counted_day', JSON.stringify({ yas55er82: today() }));
     vi.stubGlobal('fetch', me('yas55eR82'));
     const { PiWarmup } = await import('@/components/pi/PiWarmup');
     await act(async () => { render(createElement(PiWarmup)); });
@@ -49,10 +50,19 @@ describe('PiWarmup counts a visitor once', () => {
   });
 
   it('no session yet: warms up — that handshake is also how the visitor logs in', async () => {
-    window.localStorage.setItem('__tec_pi_counted', JSON.stringify(['yas55er82']));
+    window.localStorage.setItem('__tec_pi_counted_day', JSON.stringify({ yas55er82: today() }));
     vi.stubGlobal('fetch', me(null));
     const { PiWarmup } = await import('@/components/pi/PiWarmup');
     await act(async () => { render(createElement(PiWarmup)); });
     await vi.waitFor(() => expect(session.warm).toHaveBeenCalledTimes(1));
+  });
+
+  it('counted yesterday: today\'s first visit warms up again', async () => {
+    window.localStorage.setItem('__tec_pi_counted_day', JSON.stringify({ yas55er82: '2000-01-01' }));
+    vi.stubGlobal('fetch', me('yas55eR82'));
+    const { PiWarmup } = await import('@/components/pi/PiWarmup');
+    await act(async () => { render(createElement(PiWarmup)); });
+    await vi.waitFor(() => expect(session.warm).toHaveBeenCalledTimes(1));
+    expect(session.announceCountedVisit).not.toHaveBeenCalled();
   });
 });
