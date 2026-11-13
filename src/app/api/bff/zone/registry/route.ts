@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { gatewayFetch } from '@/lib/gateway-fetch';
 
 // GET /api/bff/zone/registry — the public verified registry (C-120).
 // Server-only: calls the real Zone backend (zone module in identity-service) via
@@ -37,7 +38,7 @@ function fromBackend(e: Record<string, unknown>): Entity {
 export async function GET() {
   if (GW) {
     try {
-      const res = await fetch(`${GW}/api/identity/zone/registry`, { headers: gwHeaders(), cache: 'no-store' });
+      const res = await gatewayFetch(`${GW}/api/identity/zone/registry`, { headers: gwHeaders(), cache: 'no-store' });
       if (res.ok) {
         const data = await res.json().catch(() => ({}));
         const raw  = (data?.data?.entities ?? []) as Record<string, unknown>[];
