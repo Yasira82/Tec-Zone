@@ -5,6 +5,7 @@
 // enforced by the backend. Reads of verified status stay public (registry / verify).
 // NEW-A: the gateway URL is server-only (API_GATEWAY_URL) — never shipped to the client.
 import { APP_SOURCE } from '@/lib/app-source';
+import { gatewayFetch } from '@/lib/gateway-fetch';
 
 const GW = process.env.API_GATEWAY_URL ?? '';
 
@@ -27,7 +28,7 @@ async function call(
 ): Promise<ZoneCallResult> {
   if (!GW) return { ok: false, status: 503, error: 'Gateway not configured' };
   try {
-    const res = await fetch(`${GW}${path}`, {
+    const res = await gatewayFetch(`${GW}${path}`, {
       method,
       headers: gwHeaders(token),
       ...(body !== undefined && { body: JSON.stringify(body) }),
@@ -62,7 +63,7 @@ export async function resolvePublicEntity(
 ): Promise<{ entity: PublicEntity | null; source: EntitySource }> {
   if (!GW) return { entity: null, source: 'unavailable' };
   try {
-    const res = await fetch(`${GW}/api/identity/zone/entity/${encodeURIComponent(handle)}`, {
+    const res = await gatewayFetch(`${GW}/api/identity/zone/entity/${encodeURIComponent(handle)}`, {
       headers: gwHeaders(), cache: 'no-store',
     });
     if (res.status === 404) return { entity: null, source: 'not-found' };
@@ -106,7 +107,7 @@ export async function searchZone(query: string): Promise<{ ok: boolean; results:
   const q = query.trim();
   if (!GW || q.length < 1) return { ok: !!GW, results: [] };
   try {
-    const res = await fetch(`${GW}/api/identity/zone/lookup?q=${encodeURIComponent(q)}`, {
+    const res = await gatewayFetch(`${GW}/api/identity/zone/lookup?q=${encodeURIComponent(q)}`, {
       headers: gwHeaders(), cache: 'no-store',
     });
     if (!res.ok) return { ok: false, results: [] };
@@ -146,7 +147,7 @@ export const submitVerification = (
 export async function resolveProStatus(token: string): Promise<boolean> {
   if (!GW) return false;
   try {
-    const res = await fetch(`${GW}/api/commerce/subscriptions/status?app=${encodeURIComponent(APP_SOURCE)}`, {
+    const res = await gatewayFetch(`${GW}/api/commerce/subscriptions/status?app=${encodeURIComponent(APP_SOURCE)}`, {
       headers: gwHeaders(token), cache: 'no-store',
     });
     if (!res.ok) return false;
