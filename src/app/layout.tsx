@@ -4,6 +4,7 @@ import { RefApply } from '@/components/referral/RefApply';
 import { LocaleProvider } from '@/lib/i18n';
 import { HUB_HOSTS } from '@/lib/pi-network';
 import type { Metadata } from 'next';
+import { APP_META } from '@/lib/app-meta';
 import '@/styles/tec-design-tokens.css';
 import { ArrivalReport } from '@/components/pioneer/ArrivalReport';
 import { QuestReturn } from '@/components/pioneer/QuestReturn';
@@ -11,7 +12,10 @@ import { SAFE_BOTTOM_BOOT_SCRIPT } from '@/lib/safe-bottom';
 
 export const metadata: Metadata = {
   title:       'TEC Zone — Verification',
-  description: 'TEC Zone — verified trust for the Pi ecosystem. What can be trusted?',
+  description: APP_META.description,
+  applicationName: APP_META.name,
+  openGraph:   { title: APP_META.name, description: APP_META.description, siteName: APP_META.name, type: 'website' },
+  twitter:     { card: 'summary', title: APP_META.name, description: APP_META.description },
 };
 
 export default function RootLayout({
