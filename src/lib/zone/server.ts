@@ -28,7 +28,7 @@ async function call(
 ): Promise<ZoneCallResult> {
   if (!GW) return { ok: false, status: 503, error: 'Gateway not configured' };
   try {
-    const res = await fetch(`${GW}${path}`, {
+    const res = await gatewayFetch(`${GW}${path}`, {
       method,
       headers: gwHeaders(token),
       ...(body !== undefined && { body: JSON.stringify(body) }),
