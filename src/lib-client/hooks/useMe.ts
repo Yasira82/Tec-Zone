@@ -18,9 +18,9 @@ interface Me {
    *
    * It exists for one observation: an app opened from the Hub's Quest rendered
    * `/app` — which the page guard only serves to a WHOLE session — and the same
-   * page then said "Not signed in". A check opened by hand is a full navigation
-   * and says the session is fine; only this request, from this page, can say
-   * what it was told.
+   * page then said "Not signed in", on some visits and not others. A check opened
+   * by hand is a full navigation and says the session is fine; only this request,
+   * from this page, can say what it was told.
    */
   reason: string | null;
 }
