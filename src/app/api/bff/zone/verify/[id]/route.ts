@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verify, type VerifyResult } from '@/lib/zone/registry';
+import { gatewayFetch } from '@/lib/gateway-fetch';
 
 // C-120 §5 API — GET /api/bff/zone/verify/:id
 //   → { id, verified, status, evidence: [...], verified_at }
@@ -43,7 +44,7 @@ export async function GET(
 
   if (GW) {
     try {
-      const res = await fetch(`${GW}/api/identity/zone/entity/${encodeURIComponent(id)}`, {
+      const res = await gatewayFetch(`${GW}/api/identity/zone/entity/${encodeURIComponent(id)}`, {
         headers: gwHeaders(), cache: 'no-store',
       });
       if (res.ok) {

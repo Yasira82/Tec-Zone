@@ -16,6 +16,7 @@ import {
 import { CancelProButton } from '@/components/pro/CancelProButton';
 import { useZoneCopy } from '@/lib/zone/copy';
 import { Icon } from './Icon';
+import { readProState } from '@/lib/subscription/read-pro-state';
 
 const PRICE   = 10;                     // π / month
 const ITEM_ID = 'zone_pro_monthly';
@@ -50,17 +51,12 @@ export function ZonePro() {
     fetch('/api/bff/subscription', { credentials: 'include', cache: 'no-store' })
       .then((r) => r.json()).catch(() => ({}))
       .then((j: Record<string, unknown>) => {
-        const d = (j?.data ?? j ?? {}) as Record<string, unknown>;
-        const s = ((d?.subscription ?? d) ?? {}) as Record<string, unknown>;
-        const end  = typeof s.current_period_end === 'string' ? new Date(s.current_period_end) : null;
-        const live = s.isActive !== false && !(s.isExpired === true || (end !== null && end.getTime() < Date.now()));
-        const plan = String(s.plan ?? '').toUpperCase();
-        setIsSubscribed(live && (plan === 'PRO' || plan === 'ENTERPRISE'));
+        // One reading, fail-closed — the same as the server's (TEC-AUDIT-0044).
+        const st = readProState(j);
+        setIsSubscribed(st.pro);
         // Renewal signal (Pi Pro is one-time, no auto-renewal) — commerce sends
         // daysRemaining; fall back to the period end. Drives a re-subscribe nudge.
-        const days = typeof s.daysRemaining === 'number'
-          ? s.daysRemaining
-          : end ? Math.max(0, Math.ceil((end.getTime() - Date.now()) / 86400000)) : null;
+        const days = st.daysRemaining;
         setDaysRemaining(days);
       })
       .catch(() => {});
