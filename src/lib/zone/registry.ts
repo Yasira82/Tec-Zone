@@ -67,7 +67,7 @@ export const REGISTRY: VerifiedEntity[] = [
   project('tec-connection', 'TEC Connection', 'connection.tecosystem.app', 'Relationship graph — connections, trust, collaboration.'),
   project('tec-zone',       'TEC Zone',       'zone.tecosystem.app',       'Verification Runtime — the trust layer of the Pi ecosystem.'),
   {
-    id: 'the-elite-consortium', type: 'builder', name: 'The Elite Consortium',
+    id: 'tec', type: 'builder', name: 'TEC',
     summary: 'Operator and builder of the TEC federated platform.',
     status: 'verified', verifiedAt: V1_DATE,
     evidence: [
